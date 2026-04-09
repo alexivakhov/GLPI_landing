@@ -1,0 +1,2769 @@
+<!DOCTYPE html>
+<html lang="uk">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>TechExpert — Автоматизація ІТ-служб на базі GLPI</title>
+  <meta name="description" content="TechExpert — комплексне рішення для автоматизації ITSM-процесів, управління заявками, інвентаризацією та ризиками ІБ на базі платформи GLPI.">
+  <link rel="icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'><rect width='32' height='32' rx='6' fill='%230077CC'/><text x='50%25' y='54%25' dominant-baseline='middle' text-anchor='middle' font-family='Arial,sans-serif' font-weight='900' font-size='14' fill='white'>TE</text></svg>">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800;900&display=swap" rel="stylesheet">
+  <script src="https://unpkg.com/lucide@latest/dist/umd/lucide.js"></script>
+
+  <style>
+    /* ===== CSS VARIABLES ===== */
+    :root {
+      --primary: #0077CC;
+      --primary-dark: #005fa3;
+      --primary-light: #1A90E8;
+      --accent: #FF8C00;
+      --accent-hover: #e67e00;
+      --bg-dark: #0D1B2A;
+      --bg-dark2: #112236;
+      --bg-darker: #081422;
+      --bg-light: #F7F8FA;
+      --bg-white: #ffffff;
+      --text-dark: #111827;
+      --text-muted: #6B7280;
+      --text-light: #D1D5DB;
+      --border: #E5E7EB;
+      --border-dark: rgba(255,255,255,0.1);
+      --card-shadow: 0 4px 24px rgba(0,0,0,0.08);
+      --card-shadow-hover: 0 8px 40px rgba(0,119,204,0.18);
+      --radius: 14px;
+      --radius-sm: 8px;
+      --transition: 0.3s ease;
+      --font: 'Inter', system-ui, sans-serif;
+    }
+
+    /* ===== RESET & BASE ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { scroll-behavior: smooth; font-size: 16px; }
+    body {
+      font-family: var(--font);
+      color: var(--text-dark);
+      background: var(--bg-white);
+      line-height: 1.6;
+      overflow-x: hidden;
+    }
+    img { max-width: 100%; display: block; }
+    a { text-decoration: none; color: inherit; }
+    ul { list-style: none; }
+    h1,h2,h3,h4,h5 { line-height: 1.2; font-weight: 700; }
+
+
+    /* ===== LOGO SVG ===== */
+    .logo-svg-wrap { display: flex; flex-direction: column; align-items: flex-start; gap: 2px; }
+    .logo-svg-header svg, .logo-svg-footer svg {
+      display: block;
+      overflow: visible;
+    }
+    .logo-svg-header svg { height: 36px; width: auto; }
+    .logo-svg-footer svg { height: 32px; width: auto; }
+    @media (max-width: 768px) {
+      .logo-svg-header svg { height: 28px; }
+    }
+
+
+    /* ===== SCREENSHOT MOCKUPS ===== */
+    .browser-mock {
+      background: #1e2a3a;
+      border-radius: 12px;
+      overflow: hidden;
+      box-shadow: 0 20px 60px rgba(0,0,0,0.35), 0 0 0 1px rgba(255,255,255,0.06);
+    }
+    .browser-bar {
+      background: #263040;
+      padding: 10px 14px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      border-bottom: 1px solid rgba(255,255,255,0.06);
+    }
+    .browser-dots { display: flex; gap: 5px; }
+    .browser-dot {
+      width: 10px; height: 10px;
+      border-radius: 50%;
+    }
+    .browser-dot.r { background: #ff5f57; }
+    .browser-dot.y { background: #febc2e; }
+    .browser-dot.g { background: #28c840; }
+    .browser-url {
+      flex: 1;
+      background: rgba(255,255,255,0.07);
+      border-radius: 6px;
+      padding: 5px 12px;
+      font-size: 0.72rem;
+      color: rgba(255,255,255,0.4);
+      font-family: monospace;
+    }
+    .browser-body { padding: 0; overflow: hidden; }
+
+    /* GLPI App Shell */
+    .glpi-shell {
+      display: grid;
+      grid-template-columns: 180px 1fr;
+      min-height: 320px;
+      font-size: 0.72rem;
+    }
+    .glpi-sidebar {
+      background: #1a2640;
+      padding: 12px 0;
+      border-right: 1px solid rgba(255,255,255,0.06);
+    }
+    .glpi-sidebar-logo {
+      padding: 8px 14px 16px;
+      font-weight: 800;
+      font-size: 0.85rem;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .glpi-logo-dot { width: 18px; height: 18px; background: #004D84; border-radius: 4px; display: flex; align-items: center; justify-content: center; font-size: 0.55rem; font-weight: 900; color: #fff; }
+    .glpi-nav-item {
+      padding: 8px 14px;
+      color: rgba(255,255,255,0.5);
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      cursor: default;
+      transition: background 0.2s;
+      font-size: 0.73rem;
+    }
+    .glpi-nav-item.active {
+      background: rgba(0,77,132,0.35);
+      color: #60B4FF;
+      border-left: 2px solid #0077CC;
+    }
+    .glpi-nav-icon { width: 14px; height: 14px; opacity: 0.7; }
+    .glpi-nav-item.active .glpi-nav-icon { opacity: 1; }
+    .glpi-main { background: #f0f2f5; overflow: hidden; }
+    .glpi-topbar {
+      background: #fff;
+      padding: 8px 16px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid #e5e7eb;
+    }
+    .glpi-topbar-title { font-size: 0.8rem; font-weight: 700; color: #1a2640; }
+    .glpi-topbar-actions { display: flex; gap: 6px; }
+    .glpi-btn-sm {
+      padding: 4px 10px;
+      border-radius: 4px;
+      font-size: 0.68rem;
+      font-weight: 600;
+      background: #0077CC;
+      color: #fff;
+    }
+    .glpi-btn-sm.outline { background: transparent; border: 1px solid #d1d5db; color: #555; }
+    .glpi-content { padding: 12px 14px; }
+
+    /* Dashboard widgets */
+    .glpi-stat-row { display: grid; grid-template-columns: repeat(4, 1fr); gap: 8px; margin-bottom: 10px; }
+    .glpi-stat-w {
+      background: #fff;
+      border-radius: 6px;
+      padding: 10px 12px;
+      border: 1px solid #e5e7eb;
+    }
+    .glpi-stat-w-val { font-size: 1.1rem; font-weight: 800; color: #1a2640; }
+    .glpi-stat-w-label { font-size: 0.6rem; color: #9ca3af; margin-top: 2px; }
+    .glpi-stat-w.blue .glpi-stat-w-val { color: #0077CC; }
+    .glpi-stat-w.green .glpi-stat-w-val { color: #16a34a; }
+    .glpi-stat-w.orange .glpi-stat-w-val { color: #ea580c; }
+
+    .glpi-chart-row { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; margin-bottom: 10px; }
+    .glpi-chart-w { background: #fff; border-radius: 6px; padding: 10px 12px; border: 1px solid #e5e7eb; }
+    .glpi-chart-title { font-size: 0.65rem; font-weight: 700; color: #374151; margin-bottom: 8px; }
+    .glpi-bar-chart { display: flex; align-items: flex-end; gap: 4px; height: 50px; }
+    .glpi-bar { background: #0077CC; border-radius: 3px 3px 0 0; flex: 1; opacity: 0.85; }
+    .glpi-bar:nth-child(2) { background: #60B4FF; }
+    .glpi-bar:nth-child(3) { background: #0077CC; opacity: 0.6; }
+    .glpi-bar:nth-child(4) { background: #60B4FF; opacity: 0.7; }
+    .glpi-bar:nth-child(5) { background: #0077CC; }
+    .glpi-donut {
+      width: 50px; height: 50px;
+      border-radius: 50%;
+      background: conic-gradient(#0077CC 0% 42%, #22c55e 42% 68%, #f59e0b 68% 85%, #e5e7eb 85% 100%);
+      margin: 0 auto;
+    }
+
+    /* Ticket list */
+    .glpi-table { background: #fff; border-radius: 6px; border: 1px solid #e5e7eb; overflow: hidden; }
+    .glpi-table-head {
+      display: grid;
+      grid-template-columns: 50px 1fr 100px 80px 70px;
+      padding: 8px 12px;
+      background: #f9fafb;
+      border-bottom: 1px solid #e5e7eb;
+      font-size: 0.6rem;
+      font-weight: 700;
+      color: #9ca3af;
+      text-transform: uppercase;
+    }
+    .glpi-table-row {
+      display: grid;
+      grid-template-columns: 50px 1fr 100px 80px 70px;
+      padding: 7px 12px;
+      border-bottom: 1px solid #f3f4f6;
+      align-items: center;
+    }
+    .glpi-table-row:last-child { border-bottom: none; }
+    .glpi-ticket-id { font-size: 0.65rem; font-weight: 700; color: #0077CC; }
+    .glpi-ticket-title { font-size: 0.65rem; color: #374151; }
+    .glpi-ticket-title span { display: block; font-size: 0.57rem; color: #9ca3af; margin-top: 1px; }
+    .glpi-badge-sm {
+      display: inline-block;
+      padding: 2px 6px;
+      border-radius: 3px;
+      font-size: 0.57rem;
+      font-weight: 600;
+    }
+    .glpi-badge-sm.new { background: #fef3c7; color: #92400e; }
+    .glpi-badge-sm.progress { background: #dbeafe; color: #1e40af; }
+    .glpi-badge-sm.done { background: #dcfce7; color: #166534; }
+    .glpi-badge-sm.wait { background: #f3f4f6; color: #6b7280; }
+    .glpi-badge-sm.high { background: #fee2e2; color: #991b1b; }
+    .glpi-badge-sm.medium { background: #fef3c7; color: #92400e; }
+    .glpi-badge-sm.low { background: #f0fdf4; color: #166534; }
+    .glpi-assignee { font-size: 0.6rem; color: #6b7280; display: flex; align-items: center; gap: 4px; }
+    .glpi-avatar { width: 16px; height: 16px; border-radius: 50%; background: #0077CC; color: #fff; font-size: 0.45rem; display: flex; align-items: center; justify-content: center; font-weight: 700; }
+    .glpi-sla-ok { font-size: 0.6rem; color: #16a34a; font-weight: 600; }
+    .glpi-sla-warn { font-size: 0.6rem; color: #ea580c; font-weight: 600; }
+
+    /* Asset inventory */
+    .glpi-asset-row {
+      display: grid;
+      grid-template-columns: 30px 1fr 80px 70px 60px;
+      padding: 7px 12px;
+      border-bottom: 1px solid #f3f4f6;
+      align-items: center;
+    }
+    .glpi-asset-icon { font-size: 0.8rem; }
+    .glpi-asset-name { font-size: 0.65rem; color: #374151; font-weight: 600; }
+    .glpi-asset-name span { display: block; font-size: 0.57rem; color: #9ca3af; font-weight: 400; }
+    .glpi-status-dot { width: 6px; height: 6px; border-radius: 50%; }
+    .glpi-status-dot.online { background: #22c55e; }
+    .glpi-status-dot.offline { background: #e5e7eb; }
+    .glpi-status-dot.warn { background: #f59e0b; }
+
+    /* Screenshot sections layout */
+    .screenshot-section { padding: 0 0 60px; }
+    .about-screenshot-wrap {
+      position: relative;
+    }
+    .about-screenshot-wrap .browser-mock {
+      transform: perspective(800px) rotateY(-5deg) rotateX(3deg);
+      transform-origin: left center;
+      transition: transform 0.4s ease;
+    }
+    .about-screenshot-wrap:hover .browser-mock {
+      transform: perspective(800px) rotateY(0deg) rotateX(0deg);
+    }
+    .processes-screenshot {
+      margin-top: 52px;
+    }
+    .screenshot-caption {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 0.82rem;
+      color: rgba(255,255,255,0.45);
+      font-style: italic;
+    }
+    .screenshot-caption-light {
+      text-align: center;
+      margin-top: 14px;
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      font-style: italic;
+    }
+    .advantages-screenshot-wrap {
+      margin-top: 60px;
+    }
+    .adv-screenshot-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 24px;
+      align-items: start;
+    }
+    .adv-screenshot-text h3 {
+      font-size: 1.4rem;
+      color: var(--text-dark);
+      margin-bottom: 12px;
+    }
+    .adv-screenshot-text p {
+      color: var(--text-muted);
+      line-height: 1.7;
+      margin-bottom: 20px;
+    }
+    .adv-screenshot-text ul {
+      list-style: none;
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .adv-screenshot-text ul li {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-size: 0.9rem;
+      color: var(--text-dark);
+    }
+    .adv-screenshot-text ul li::before {
+      content: '✓';
+      width: 20px; height: 20px;
+      background: rgba(0,119,204,0.1);
+      color: var(--primary);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.7rem;
+      font-weight: 700;
+      flex-shrink: 0;
+    }
+    @media (max-width: 768px) {
+      .adv-screenshot-grid { grid-template-columns: 1fr; }
+      .about-screenshot-wrap .browser-mock { transform: none; }
+      .glpi-shell { grid-template-columns: 1fr; }
+      .glpi-sidebar { display: none; }
+      .glpi-stat-row { grid-template-columns: 1fr 1fr; }
+      .glpi-chart-row { grid-template-columns: 1fr; }
+      .glpi-table-head, .glpi-table-row { grid-template-columns: 50px 1fr 80px; }
+      .glpi-table-head > *:nth-child(4),
+      .glpi-table-head > *:nth-child(5),
+      .glpi-table-row > *:nth-child(4),
+      .glpi-table-row > *:nth-child(5) { display: none; }
+    }
+
+    /* ===== SCROLL ANIMATIONS ===== */
+    .fade-in { opacity: 0; transform: translateY(30px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .fade-in.visible { opacity: 1; transform: translateY(0); }
+    .fade-in-left { opacity: 0; transform: translateX(-40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .fade-in-left.visible { opacity: 1; transform: translateX(0); }
+    .fade-in-right { opacity: 0; transform: translateX(40px); transition: opacity 0.7s ease, transform 0.7s ease; }
+    .fade-in-right.visible { opacity: 1; transform: translateX(0); }
+    .fade-in-delay-1 { transition-delay: 0.1s; }
+    .fade-in-delay-2 { transition-delay: 0.2s; }
+    .fade-in-delay-3 { transition-delay: 0.3s; }
+    .fade-in-delay-4 { transition-delay: 0.4s; }
+    .fade-in-delay-5 { transition-delay: 0.5s; }
+
+    /* ===== CONTAINER ===== */
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 24px;
+    }
+
+    /* ===== BUTTONS ===== */
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 14px 28px;
+      border-radius: 50px;
+      font-family: var(--font);
+      font-weight: 600;
+      font-size: 0.95rem;
+      cursor: pointer;
+      border: none;
+      transition: all var(--transition);
+      white-space: nowrap;
+    }
+    .btn-primary {
+      background: var(--primary);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(0,119,204,0.35);
+    }
+    .btn-primary:hover {
+      background: var(--primary-dark);
+      box-shadow: 0 6px 28px rgba(0,119,204,0.5);
+      transform: translateY(-2px);
+    }
+    .btn-accent {
+      background: var(--accent);
+      color: #fff;
+      box-shadow: 0 4px 20px rgba(255,140,0,0.35);
+    }
+    .btn-accent:hover {
+      background: var(--accent-hover);
+      box-shadow: 0 6px 28px rgba(255,140,0,0.5);
+      transform: translateY(-2px);
+    }
+    .btn-outline {
+      background: transparent;
+      color: #fff;
+      border: 2px solid rgba(255,255,255,0.6);
+    }
+    .btn-outline:hover {
+      background: rgba(255,255,255,0.1);
+      border-color: #fff;
+    }
+    .btn-outline-primary {
+      background: transparent;
+      color: var(--primary);
+      border: 2px solid var(--primary);
+    }
+    .btn-outline-primary:hover {
+      background: var(--primary);
+      color: #fff;
+    }
+    .btn-lg { padding: 17px 36px; font-size: 1.05rem; }
+
+    /* ===== SECTION COMMON ===== */
+    section { padding: 90px 0; }
+    .section-tag {
+      display: inline-block;
+      background: rgba(0,119,204,0.1);
+      color: var(--primary);
+      font-size: 0.8rem;
+      font-weight: 600;
+      letter-spacing: 1.5px;
+      text-transform: uppercase;
+      padding: 6px 14px;
+      border-radius: 50px;
+      margin-bottom: 16px;
+    }
+    .section-title {
+      font-size: clamp(1.7rem, 3.5vw, 2.4rem);
+      color: var(--text-dark);
+      margin-bottom: 16px;
+    }
+    .section-subtitle {
+      font-size: 1.05rem;
+      color: var(--text-muted);
+      max-width: 640px;
+      line-height: 1.7;
+    }
+    .section-header { margin-bottom: 56px; }
+    .section-header.centered { text-align: center; }
+    .section-header.centered .section-subtitle { margin: 0 auto; }
+    .section-dark .section-title { color: #fff; }
+    .section-dark .section-subtitle { color: var(--text-light); }
+    .section-dark .section-tag { background: rgba(255,255,255,0.12); color: #fff; }
+
+    /* ===== HEADER / NAV ===== */
+    #main-header {
+      position: fixed;
+      top: 0; left: 0; right: 0;
+      z-index: 1000;
+      background: rgba(13,27,42,0.97);
+      backdrop-filter: blur(12px);
+      border-bottom: 1px solid var(--border-dark);
+      transition: all var(--transition);
+    }
+    #main-header.scrolled {
+      box-shadow: 0 4px 30px rgba(0,0,0,0.3);
+    }
+    .header-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      height: 68px;
+      gap: 24px;
+    }
+    .logo {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      font-weight: 800;
+      font-size: 1.25rem;
+      color: #fff;
+      flex-shrink: 0;
+    }
+    .logo-icon {
+      width: 36px; height: 36px;
+      background: var(--primary);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 0.75rem;
+      font-weight: 900;
+      color: #fff;
+      letter-spacing: 0.5px;
+    }
+    .logo span { color: var(--primary-light); }
+    .nav-links {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .nav-links a {
+      color: rgba(255,255,255,0.8);
+      font-size: 0.875rem;
+      font-weight: 500;
+      padding: 8px 12px;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition);
+    }
+    .nav-links a:hover {
+      color: #fff;
+      background: rgba(255,255,255,0.08);
+    }
+    .nav-cta { margin-left: 8px; padding: 9px 20px !important; font-size: 0.85rem !important; }
+    .hamburger {
+      display: none;
+      flex-direction: column;
+      gap: 5px;
+      cursor: pointer;
+      padding: 8px;
+      border: none;
+      background: none;
+    }
+    .hamburger span {
+      display: block;
+      width: 24px; height: 2px;
+      background: #fff;
+      border-radius: 2px;
+      transition: all var(--transition);
+    }
+    .hamburger.active span:nth-child(1) { transform: rotate(45deg) translate(5px,5px); }
+    .hamburger.active span:nth-child(2) { opacity: 0; }
+    .hamburger.active span:nth-child(3) { transform: rotate(-45deg) translate(5px,-5px); }
+
+    /* ===== HERO ===== */
+    #hero {
+      min-height: 100vh;
+      background: linear-gradient(135deg, var(--bg-darker) 0%, var(--bg-dark) 50%, #0e2340 100%);
+      display: flex;
+      align-items: center;
+      position: relative;
+      overflow: hidden;
+      padding: 120px 0 80px;
+    }
+    .hero-bg {
+      position: absolute;
+      inset: 0;
+      overflow: hidden;
+      pointer-events: none;
+    }
+    .hero-grid {
+      position: absolute;
+      inset: 0;
+      background-image:
+        linear-gradient(rgba(0,119,204,0.08) 1px, transparent 1px),
+        linear-gradient(90deg, rgba(0,119,204,0.08) 1px, transparent 1px);
+      background-size: 60px 60px;
+    }
+    .hero-blob {
+      position: absolute;
+      border-radius: 50%;
+      filter: blur(80px);
+      opacity: 0.25;
+    }
+    .hero-blob-1 {
+      width: 600px; height: 600px;
+      background: radial-gradient(circle, #0077CC, transparent);
+      top: -200px; right: -100px;
+    }
+    .hero-blob-2 {
+      width: 400px; height: 400px;
+      background: radial-gradient(circle, #FF8C00, transparent);
+      bottom: -100px; left: 5%;
+      opacity: 0.12;
+    }
+    .hero-dots {
+      position: absolute;
+      top: 0; left: 0; right: 0; bottom: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.07) 1px, transparent 1px);
+      background-size: 30px 30px;
+    }
+    .hero-inner {
+      position: relative;
+      z-index: 2;
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: center;
+    }
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,119,204,0.2);
+      border: 1px solid rgba(0,119,204,0.4);
+      color: #60B4FF;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 50px;
+      margin-bottom: 24px;
+    }
+    .hero-badge-dot {
+      width: 7px; height: 7px;
+      background: #60B4FF;
+      border-radius: 50%;
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0%,100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.5; transform: scale(1.3); }
+    }
+    .hero-title {
+      font-size: clamp(2rem, 4.5vw, 3.2rem);
+      color: #fff;
+      font-weight: 800;
+      line-height: 1.15;
+      margin-bottom: 24px;
+    }
+    .hero-title .highlight {
+      background: linear-gradient(90deg, #60B4FF, #0077CC);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+      background-clip: text;
+    }
+    .hero-subtitle {
+      font-size: 1.1rem;
+      color: rgba(255,255,255,0.75);
+      line-height: 1.75;
+      margin-bottom: 40px;
+      max-width: 540px;
+    }
+    .hero-buttons {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 14px;
+      margin-bottom: 48px;
+    }
+    .hero-stats {
+      display: flex;
+      gap: 32px;
+      flex-wrap: wrap;
+    }
+    .hero-stat {
+      text-align: center;
+    }
+    .hero-stat-value {
+      font-size: 1.6rem;
+      font-weight: 800;
+      color: #fff;
+    }
+    .hero-stat-label {
+      font-size: 0.78rem;
+      color: rgba(255,255,255,0.55);
+      margin-top: 2px;
+    }
+    .hero-visual {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .hero-card-stack {
+      position: relative;
+      width: 100%;
+      max-width: 460px;
+    }
+    .hero-main-card {
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 20px;
+      padding: 32px;
+      backdrop-filter: blur(10px);
+    }
+    .hero-card-header {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      margin-bottom: 24px;
+    }
+    .hero-card-icon {
+      width: 44px; height: 44px;
+      background: var(--primary);
+      border-radius: 10px;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .hero-card-title { color: #fff; font-size: 1rem; font-weight: 600; }
+    .hero-card-sub { color: rgba(255,255,255,0.5); font-size: 0.8rem; }
+    .ticket-list { display: flex; flex-direction: column; gap: 10px; }
+    .ticket-item {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: 8px;
+      padding: 10px 14px;
+    }
+    .ticket-dot {
+      width: 8px; height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .ticket-dot.green { background: #22c55e; }
+    .ticket-dot.blue { background: #60B4FF; }
+    .ticket-dot.orange { background: var(--accent); }
+    .ticket-text { color: rgba(255,255,255,0.8); font-size: 0.82rem; flex: 1; }
+    .ticket-badge {
+      font-size: 0.7rem;
+      font-weight: 600;
+      padding: 3px 8px;
+      border-radius: 50px;
+    }
+    .ticket-badge.done { background: rgba(34,197,94,0.15); color: #22c55e; }
+    .ticket-badge.progress { background: rgba(96,180,255,0.15); color: #60B4FF; }
+    .ticket-badge.new { background: rgba(255,140,0,0.15); color: var(--accent); }
+    .hero-floating-card {
+      position: absolute;
+      background: rgba(17,34,54,0.9);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: 12px;
+      padding: 14px 18px;
+      backdrop-filter: blur(10px);
+    }
+    .hfc-top {
+      top: -20px; right: -20px;
+      animation: float1 4s ease-in-out infinite;
+    }
+    .hfc-bottom {
+      bottom: -20px; left: -20px;
+      animation: float2 5s ease-in-out infinite;
+    }
+    @keyframes float1 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-10px); } }
+    @keyframes float2 { 0%,100% { transform: translateY(0); } 50% { transform: translateY(8px); } }
+    .hfc-label { font-size: 0.72rem; color: rgba(255,255,255,0.5); margin-bottom: 4px; }
+    .hfc-value { font-size: 1.1rem; font-weight: 700; color: #fff; }
+    .hfc-value.green { color: #22c55e; }
+    .hfc-mini { display: flex; align-items: center; gap: 8px; }
+    .hfc-mini-icon { width: 28px; height: 28px; background: rgba(0,119,204,0.2); border-radius: 6px; display: flex; align-items: center; justify-content: center; }
+
+    /* ===== ABOUT GLPI ===== */
+    #about-glpi { background: var(--bg-light); }
+    .about-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: center;
+    }
+    .modules-chips {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin: 28px 0 36px;
+    }
+    .chip {
+      background: rgba(0,119,204,0.1);
+      color: var(--primary);
+      border: 1px solid rgba(0,119,204,0.2);
+      padding: 6px 14px;
+      border-radius: 50px;
+      font-size: 0.82rem;
+      font-weight: 500;
+      transition: all var(--transition);
+    }
+    .chip:hover { background: var(--primary); color: #fff; }
+    .stats-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .stat-card {
+      background: #fff;
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 24px 20px;
+      box-shadow: var(--card-shadow);
+      text-align: center;
+      transition: all var(--transition);
+    }
+    .stat-card:hover {
+      box-shadow: var(--card-shadow-hover);
+      border-color: rgba(0,119,204,0.2);
+      transform: translateY(-3px);
+    }
+    .stat-number {
+      font-size: 2rem;
+      font-weight: 800;
+      color: var(--primary);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .stat-label {
+      font-size: 0.82rem;
+      color: var(--text-muted);
+      line-height: 1.4;
+    }
+    .about-text p { color: var(--text-muted); line-height: 1.8; font-size: 1.02rem; }
+
+    /* ===== ADVANTAGES ===== */
+    #advantages { background: var(--bg-white); }
+    .cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .feature-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 32px 28px;
+      box-shadow: var(--card-shadow);
+      transition: all var(--transition);
+      position: relative;
+      overflow: hidden;
+    }
+    .feature-card::before {
+      content: '';
+      position: absolute;
+      top: 0; left: 0; right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--primary), var(--primary-light));
+      transform: scaleX(0);
+      transform-origin: left;
+      transition: transform var(--transition);
+    }
+    .feature-card:hover::before { transform: scaleX(1); }
+    .feature-card:hover {
+      box-shadow: var(--card-shadow-hover);
+      border-color: rgba(0,119,204,0.15);
+      transform: translateY(-4px);
+    }
+    .card-icon {
+      width: 52px; height: 52px;
+      background: rgba(0,119,204,0.1);
+      border-radius: 12px;
+      display: flex; align-items: center; justify-content: center;
+      margin-bottom: 20px;
+      font-size: 1.5rem;
+    }
+    .card-icon svg { color: var(--primary); }
+    .feature-card h3 { font-size: 1.05rem; margin-bottom: 10px; color: var(--text-dark); }
+    .feature-card p { font-size: 0.9rem; color: var(--text-muted); line-height: 1.7; }
+
+    /* ===== PROCESSES ===== */
+    #processes { background: var(--bg-dark); }
+    .processes-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 16px;
+    }
+    .process-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: 20px;
+      transition: all var(--transition);
+    }
+    .process-item:hover {
+      background: rgba(0,119,204,0.1);
+      border-color: rgba(0,119,204,0.3);
+    }
+    .process-icon {
+      width: 40px; height: 40px;
+      background: rgba(0,119,204,0.2);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .process-icon svg { color: #60B4FF; }
+    .process-title { font-size: 0.95rem; font-weight: 600; color: #fff; margin-bottom: 4px; }
+    .process-desc { font-size: 0.82rem; color: rgba(255,255,255,0.55); line-height: 1.5; }
+    .itil-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(0,119,204,0.15);
+      border: 1px solid rgba(0,119,204,0.3);
+      border-radius: 50px;
+      padding: 10px 20px;
+      color: #60B4FF;
+      font-size: 0.9rem;
+      font-weight: 500;
+      margin-top: 40px;
+    }
+
+    /* ===== CTA BLOCKS ===== */
+    .cta-section {
+      padding: 80px 0;
+      background: linear-gradient(135deg, var(--primary-dark), var(--primary));
+      position: relative;
+      overflow: hidden;
+    }
+    .cta-section::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(255,255,255,0.06) 1px, transparent 1px);
+      background-size: 24px 24px;
+    }
+    .cta-inner {
+      position: relative;
+      z-index: 1;
+      text-align: center;
+    }
+    .cta-title {
+      font-size: clamp(1.5rem, 3vw, 2.1rem);
+      color: #fff;
+      font-weight: 700;
+      margin-bottom: 14px;
+      max-width: 700px;
+      margin-left: auto;
+      margin-right: auto;
+    }
+    .cta-subtitle { color: rgba(255,255,255,0.8); margin-bottom: 36px; font-size: 1rem; }
+    .cta-buttons { display: flex; justify-content: center; gap: 14px; flex-wrap: wrap; }
+    .cta-note { color: rgba(255,255,255,0.6); font-size: 0.87rem; margin-top: 20px; }
+
+    /* ===== PLUGINS ===== */
+    #plugins { background: var(--bg-light); }
+    .plugins-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 20px;
+    }
+    .plugin-card {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px 24px;
+      box-shadow: var(--card-shadow);
+      transition: all var(--transition);
+    }
+    .plugin-card:hover {
+      box-shadow: var(--card-shadow-hover);
+      border-color: rgba(0,119,204,0.2);
+      transform: translateY(-3px);
+    }
+    .plugin-icon {
+      font-size: 2rem;
+      margin-bottom: 14px;
+      display: block;
+    }
+    .plugin-card h3 { font-size: 1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
+    .plugin-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* ===== ITRM ===== */
+    #itrm {
+      background: linear-gradient(135deg, #0a1628 0%, #0D1B2A 50%, #0f2040 100%);
+      padding: 90px 0;
+      position: relative;
+      overflow: hidden;
+    }
+    #itrm::before {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background-image: radial-gradient(rgba(0,119,204,0.06) 1px, transparent 1px);
+      background-size: 32px 32px;
+    }
+    .itrm-inner { position: relative; z-index: 1; }
+    .itrm-header { text-align: center; margin-bottom: 60px; }
+    .itrm-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      background: rgba(255,140,0,0.15);
+      border: 1px solid rgba(255,140,0,0.3);
+      color: #FFB347;
+      font-size: 0.8rem;
+      font-weight: 600;
+      padding: 6px 14px;
+      border-radius: 50px;
+      margin-bottom: 16px;
+    }
+    .itrm-title { font-size: clamp(1.6rem, 3vw, 2.2rem); color: #fff; margin-bottom: 12px; }
+    .itrm-subtitle { color: rgba(255,255,255,0.6); font-size: 1rem; max-width: 580px; margin: 0 auto 12px; }
+    .itrm-desc { color: rgba(255,255,255,0.7); font-size: 0.95rem; max-width: 700px; margin: 0 auto; line-height: 1.75; }
+    .itrm-content {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 40px;
+      margin: 48px 0;
+    }
+    .itrm-col {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: 32px;
+    }
+    .itrm-col-title {
+      font-size: 1rem;
+      font-weight: 700;
+      color: #60B4FF;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+    .itrm-list { display: flex; flex-direction: column; gap: 12px; }
+    .itrm-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.88rem;
+      line-height: 1.5;
+    }
+    .itrm-list li::before {
+      content: '';
+      width: 6px; height: 6px;
+      background: var(--primary);
+      border-radius: 50%;
+      flex-shrink: 0;
+      margin-top: 6px;
+    }
+    .itrm-footer {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-wrap: wrap;
+      gap: 32px;
+      text-align: center;
+      padding: 36px;
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+    }
+    .itrm-price-label { color: rgba(255,255,255,0.55); font-size: 0.85rem; margin-bottom: 4px; }
+    .itrm-price { font-size: 2rem; font-weight: 800; color: #fff; }
+    .itrm-price span { color: var(--accent); }
+    .itrm-integrations { display: flex; flex-wrap: wrap; gap: 8px; justify-content: center; }
+    .int-badge {
+      background: rgba(0,119,204,0.15);
+      border: 1px solid rgba(0,119,204,0.3);
+      color: #60B4FF;
+      font-size: 0.78rem;
+      font-weight: 500;
+      padding: 5px 12px;
+      border-radius: 50px;
+    }
+
+    /* ===== USE CASES ===== */
+    #use-cases { background: var(--bg-white); }
+    .use-cases-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; }
+    .use-case-card {
+      background: var(--bg-light);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 36px 28px;
+      text-align: center;
+      transition: all var(--transition);
+    }
+    .use-case-card:hover {
+      box-shadow: var(--card-shadow-hover);
+      transform: translateY(-4px);
+      border-color: rgba(0,119,204,0.2);
+    }
+    .use-case-emoji { font-size: 2.5rem; margin-bottom: 16px; display: block; }
+    .use-case-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
+    .use-case-card p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.65; }
+
+    /* ===== EXPERTISE ===== */
+    #expertise { background: var(--bg-dark); }
+    .expertise-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 64px;
+      align-items: start;
+    }
+    .expertise-text p { color: rgba(255,255,255,0.7); line-height: 1.8; font-size: 0.97rem; margin-bottom: 20px; }
+    .expertise-list { display: flex; flex-direction: column; gap: 12px; margin-bottom: 32px; }
+    .expertise-list li {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.92rem;
+      line-height: 1.5;
+    }
+    .expertise-list li::before {
+      content: '→';
+      color: var(--primary-light);
+      flex-shrink: 0;
+      font-weight: 600;
+    }
+    .expertise-counters {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 16px;
+    }
+    .exp-counter {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: var(--radius);
+      padding: 24px;
+      text-align: center;
+      transition: all var(--transition);
+    }
+    .exp-counter:hover {
+      background: rgba(0,119,204,0.1);
+      border-color: rgba(0,119,204,0.3);
+    }
+    .exp-counter-value {
+      font-size: 2.2rem;
+      font-weight: 800;
+      color: var(--primary-light);
+      line-height: 1;
+      margin-bottom: 8px;
+    }
+    .exp-counter-label { font-size: 0.82rem; color: rgba(255,255,255,0.55); line-height: 1.4; }
+    .expertise-quote {
+      background: rgba(0,119,204,0.12);
+      border-left: 3px solid var(--primary);
+      border-radius: 0 var(--radius) var(--radius) 0;
+      padding: 20px 24px;
+      color: rgba(255,255,255,0.8);
+      font-size: 0.95rem;
+      line-height: 1.7;
+      font-style: italic;
+      margin-top: 16px;
+    }
+
+    /* ===== IMPLEMENTATION STEPS ===== */
+    #implementation { background: var(--bg-light); }
+    .steps-timeline { position: relative; }
+    .steps-timeline::before {
+      content: '';
+      position: absolute;
+      left: 50%;
+      top: 0; bottom: 0;
+      width: 2px;
+      background: linear-gradient(to bottom, var(--primary), rgba(0,119,204,0.1));
+      transform: translateX(-50%);
+    }
+    .step-item {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      gap: 0;
+      align-items: start;
+      margin-bottom: 48px;
+    }
+    .step-item:last-child { margin-bottom: 0; }
+    .step-content {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      padding: 28px;
+      box-shadow: var(--card-shadow);
+      transition: all var(--transition);
+    }
+    .step-content:hover {
+      box-shadow: var(--card-shadow-hover);
+      border-color: rgba(0,119,204,0.2);
+    }
+    .step-item:nth-child(odd) .step-content { grid-column: 1; }
+    .step-item:nth-child(odd) .step-center { grid-column: 2; }
+    .step-item:nth-child(odd) .step-empty { grid-column: 3; }
+    .step-item:nth-child(even) .step-empty { grid-column: 1; }
+    .step-item:nth-child(even) .step-center { grid-column: 2; }
+    .step-item:nth-child(even) .step-content { grid-column: 3; }
+    .step-center {
+      display: flex;
+      justify-content: center;
+      padding-top: 24px;
+    }
+    .step-number {
+      width: 48px; height: 48px;
+      background: var(--primary);
+      color: #fff;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 1.1rem;
+      font-weight: 800;
+      box-shadow: 0 0 0 6px rgba(0,119,204,0.15);
+      position: relative;
+      z-index: 1;
+    }
+    .step-content h3 { font-size: 1rem; margin-bottom: 8px; color: var(--text-dark); }
+    .step-content p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.65; }
+    .step-empty {}
+
+    /* ===== COMPARISON ===== */
+    #comparison { background: var(--bg-white); }
+    .comparison-table {
+      display: grid;
+      grid-template-columns: 1fr 60px 1fr;
+      gap: 0;
+      border-radius: var(--radius);
+      overflow: hidden;
+      border: 1px solid var(--border);
+      box-shadow: var(--card-shadow);
+    }
+    .comp-col {
+      padding: 0;
+    }
+    .comp-header {
+      padding: 24px 28px;
+      font-size: 1.05rem;
+      font-weight: 700;
+      text-align: center;
+    }
+    .comp-header.without {
+      background: #FEF2F2;
+      color: #DC2626;
+    }
+    .comp-header.with {
+      background: #F0FDF4;
+      color: #16A34A;
+    }
+    .comp-divider-header {
+      background: var(--bg-light);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 24px 0;
+      font-weight: 700;
+      color: var(--text-muted);
+      font-size: 0.9rem;
+    }
+    .comp-item {
+      padding: 16px 28px;
+      font-size: 0.9rem;
+      line-height: 1.5;
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
+    }
+    .comp-item.without {
+      background: #FFFAFA;
+      color: #7C3D3D;
+    }
+    .comp-item.with {
+      background: #FAFFFE;
+      color: #1F5C3B;
+    }
+    .comp-item-icon { flex-shrink: 0; margin-top: 2px; }
+    .comp-divider-item {
+      background: var(--bg-light);
+      border-top: 1px solid var(--border);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 16px 0;
+    }
+    .comp-vs {
+      width: 28px; height: 28px;
+      background: var(--border);
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 0.65rem;
+      font-weight: 700;
+      color: var(--text-muted);
+    }
+
+    /* ===== FAQ ===== */
+    #faq { background: var(--bg-light); }
+    .faq-list { max-width: 800px; margin: 0 auto; }
+    .faq-item {
+      background: var(--bg-white);
+      border: 1px solid var(--border);
+      border-radius: var(--radius);
+      margin-bottom: 12px;
+      overflow: hidden;
+      transition: all var(--transition);
+    }
+    .faq-item:hover { border-color: rgba(0,119,204,0.2); }
+    .faq-question {
+      padding: 22px 28px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      cursor: pointer;
+      font-size: 0.97rem;
+      font-weight: 600;
+      color: var(--text-dark);
+      gap: 16px;
+      user-select: none;
+    }
+    .faq-chevron {
+      width: 24px; height: 24px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+      color: var(--text-muted);
+      transition: transform var(--transition);
+    }
+    .faq-item.open .faq-chevron { transform: rotate(180deg); }
+    .faq-answer {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.4s ease, padding 0.3s ease;
+      padding: 0 28px;
+      color: var(--text-muted);
+      font-size: 0.92rem;
+      line-height: 1.75;
+    }
+    .faq-item.open .faq-answer {
+      max-height: 400px;
+      padding: 0 28px 22px;
+    }
+    .faq-item.open { border-color: rgba(0,119,204,0.25); box-shadow: 0 4px 20px rgba(0,119,204,0.08); }
+    .faq-item.open .faq-question { color: var(--primary); }
+
+    /* ===== CONTACT ===== */
+    #contact { background: var(--bg-dark); }
+    .contact-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 60px;
+      align-items: start;
+    }
+    .contact-form {
+      background: rgba(255,255,255,0.04);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius);
+      padding: 36px;
+    }
+    .form-row { display: grid; grid-template-columns: 1fr 1fr; gap: 16px; }
+    .form-group { margin-bottom: 18px; }
+    .form-label {
+      display: block;
+      font-size: 0.85rem;
+      font-weight: 500;
+      color: rgba(255,255,255,0.7);
+      margin-bottom: 8px;
+    }
+    .form-input {
+      width: 100%;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.12);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      font-family: var(--font);
+      font-size: 0.9rem;
+      color: #fff;
+      transition: all var(--transition);
+      outline: none;
+    }
+    .form-input::placeholder { color: rgba(255,255,255,0.3); }
+    .form-input:focus {
+      border-color: var(--primary);
+      background: rgba(0,119,204,0.08);
+      box-shadow: 0 0 0 3px rgba(0,119,204,0.15);
+    }
+    textarea.form-input { resize: vertical; min-height: 100px; }
+    .contact-info { padding-top: 8px; }
+    .contact-info-title { font-size: 1.1rem; font-weight: 700; color: #fff; margin-bottom: 28px; }
+    .contact-item {
+      display: flex;
+      align-items: flex-start;
+      gap: 14px;
+      margin-bottom: 24px;
+    }
+    .contact-item-icon {
+      width: 40px; height: 40px;
+      background: rgba(0,119,204,0.15);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      flex-shrink: 0;
+    }
+    .contact-item-icon svg { color: #60B4FF; }
+    .contact-item-label { font-size: 0.78rem; color: rgba(255,255,255,0.45); margin-bottom: 4px; }
+    .contact-item-value { color: rgba(255,255,255,0.9); font-size: 0.92rem; font-weight: 500; }
+    .contact-item-value a { color: rgba(255,255,255,0.9); transition: color var(--transition); }
+    .contact-item-value a:hover { color: #60B4FF; }
+
+    /* ===== FOOTER ===== */
+    footer {
+      background: var(--bg-darker);
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding: 48px 0 32px;
+    }
+    .footer-inner {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 24px;
+      margin-bottom: 32px;
+    }
+    .footer-logo { display: flex; align-items: center; gap: 10px; }
+    .footer-logo-text { font-size: 1.2rem; font-weight: 800; color: #fff; }
+    .footer-logo-sub { font-size: 0.75rem; color: rgba(255,255,255,0.4); margin-top: 2px; }
+    .footer-links { display: flex; gap: 28px; flex-wrap: wrap; }
+    .footer-links a { color: rgba(255,255,255,0.55); font-size: 0.88rem; transition: color var(--transition); }
+    .footer-links a:hover { color: #fff; }
+    .footer-social { display: flex; gap: 10px; }
+    .social-btn {
+      width: 38px; height: 38px;
+      background: rgba(255,255,255,0.06);
+      border: 1px solid rgba(255,255,255,0.1);
+      border-radius: 8px;
+      display: flex; align-items: center; justify-content: center;
+      color: rgba(255,255,255,0.6);
+      transition: all var(--transition);
+      font-size: 0.85rem;
+      font-weight: 700;
+    }
+    .social-btn:hover { background: var(--primary); border-color: var(--primary); color: #fff; }
+    .footer-bottom {
+      border-top: 1px solid rgba(255,255,255,0.06);
+      padding-top: 24px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+    .footer-copy { color: rgba(255,255,255,0.3); font-size: 0.82rem; }
+    .footer-made { color: rgba(255,255,255,0.3); font-size: 0.82rem; }
+    .footer-made a { color: rgba(0,119,204,0.7); transition: color var(--transition); }
+    .footer-made a:hover { color: var(--primary-light); }
+
+    /* ===== STICKY MOBILE CTA ===== */
+    .sticky-cta {
+      display: none;
+      position: fixed;
+      bottom: 0; left: 0; right: 0;
+      z-index: 900;
+      background: linear-gradient(135deg, var(--bg-dark), var(--bg-dark2));
+      border-top: 1px solid rgba(0,119,204,0.3);
+      padding: 12px 20px;
+      box-shadow: 0 -4px 20px rgba(0,0,0,0.3);
+    }
+    .sticky-cta .btn { width: 100%; justify-content: center; }
+
+    /* ===== MOBILE NAV ===== */
+    .mobile-nav {
+      display: none;
+      position: fixed;
+      top: 68px; left: 0; right: 0;
+      background: rgba(8,20,34,0.98);
+      backdrop-filter: blur(16px);
+      border-bottom: 1px solid var(--border-dark);
+      padding: 20px 24px;
+      z-index: 999;
+      flex-direction: column;
+      gap: 4px;
+    }
+    .mobile-nav.open { display: flex; }
+    .mobile-nav a {
+      color: rgba(255,255,255,0.85);
+      font-size: 0.95rem;
+      font-weight: 500;
+      padding: 12px 16px;
+      border-radius: var(--radius-sm);
+      transition: all var(--transition);
+    }
+    .mobile-nav a:hover { background: rgba(255,255,255,0.06); color: #fff; }
+    .mobile-nav .btn { margin-top: 8px; justify-content: center; width: 100%; }
+
+    /* ===== RESPONSIVE ===== */
+    @media (max-width: 1024px) {
+      .cards-grid { grid-template-columns: repeat(2, 1fr); }
+      .plugins-grid { grid-template-columns: repeat(2, 1fr); }
+    }
+
+    @media (max-width: 768px) {
+      section { padding: 64px 0; }
+      .nav-links { display: none; }
+      .hamburger { display: flex; }
+      .sticky-cta { display: block; }
+      footer { padding-bottom: 72px; }
+
+      .hero-inner { grid-template-columns: 1fr; gap: 40px; }
+      .hero-visual { display: none; }
+      .hero-title { font-size: 2rem; }
+      .hero-subtitle { font-size: 0.97rem; }
+
+      .about-grid { grid-template-columns: 1fr; gap: 40px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+
+      .cards-grid { grid-template-columns: 1fr; gap: 16px; }
+      .processes-grid { grid-template-columns: 1fr; }
+      .plugins-grid { grid-template-columns: 1fr; }
+      .use-cases-grid { grid-template-columns: 1fr; }
+      .expertise-grid { grid-template-columns: 1fr; gap: 40px; }
+      .expertise-counters { grid-template-columns: repeat(2, 1fr); }
+      .itrm-content { grid-template-columns: 1fr; gap: 20px; }
+      .contact-grid { grid-template-columns: 1fr; gap: 40px; }
+      .form-row { grid-template-columns: 1fr; }
+
+      .steps-timeline::before { left: 24px; }
+      .step-item { grid-template-columns: 48px 1fr; grid-template-rows: auto; }
+      .step-item:nth-child(odd) .step-content,
+      .step-item:nth-child(even) .step-content { grid-column: 2; grid-row: 1; }
+      .step-item:nth-child(odd) .step-center,
+      .step-item:nth-child(even) .step-center { grid-column: 1; grid-row: 1; padding-top: 20px; }
+      .step-empty { display: none; }
+
+      .comparison-table { grid-template-columns: 1fr; }
+      .comp-divider-header, .comp-divider-item { display: none; }
+      .comp-header.without { border-radius: var(--radius) var(--radius) 0 0; }
+      .comp-col.with-col .comp-header { border-top: 2px solid #16A34A; }
+
+      .footer-inner { flex-direction: column; align-items: flex-start; }
+      .footer-bottom { flex-direction: column; align-items: flex-start; }
+
+      .itrm-footer { flex-direction: column; gap: 24px; }
+
+      .cta-buttons { flex-direction: column; align-items: center; }
+    }
+
+    @media (max-width: 480px) {
+      .hero-stats { gap: 20px; }
+      .hero-stat-value { font-size: 1.3rem; }
+      .stats-grid { grid-template-columns: 1fr 1fr; }
+      .expertise-counters { grid-template-columns: 1fr; }
+    }
+  </style>
+</head>
+<body>
+
+<!-- ===== HEADER ===== -->
+<header id="main-header">
+  <div class="container">
+    <div class="header-inner">
+      <a href="#hero" class="logo logo-svg-wrap">
+        <span class="logo-svg-header"><svg version="1.1" id="te_logo_white" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 518.67 178.67" xml:space="preserve"> <style type="text/css"> .st0{fill:#FFFFFF;} .st1{fill-rule:evenodd;clip-rule:evenodd;fill:#004D84;} .st2{fill-rule:evenodd;clip-rule:evenodd;} .st3{display:none;} .st4{display:inline;} .st5{fill:#FFFFFF;} .st6{display:inline;fill-rule:evenodd;clip-rule:evenodd;fill:#CDCCCD;} .st7{display:inline;fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;} .st8{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;} </style> <g> <g> <path class="st0" d="M499.44,49.71c1.85,0.01,3.62,0.47,5.31,1.4c1.7,0.93,3.03,2.26,3.99,3.98c0.96,1.73,1.45,3.54,1.44,5.42 c-0.01,1.88-0.49,3.66-1.45,5.36c-0.96,1.7-2.29,3.02-3.99,3.97c-1.7,0.95-3.5,1.42-5.37,1.41c-1.88-0.01-3.66-0.49-5.36-1.44 c-1.7-0.96-3.02-2.29-3.97-3.99s-1.42-3.49-1.41-5.37c0.01-1.88,0.5-3.69,1.47-5.41c0.98-1.72,2.31-3.04,4.02-3.96 C495.81,50.16,497.59,49.7,499.44,49.71z M499.45,51.81c-1.48,0-2.91,0.36-4.27,1.1s-2.44,1.8-3.22,3.18 c-0.79,1.39-1.18,2.84-1.19,4.36c0,1.51,0.37,2.95,1.13,4.32c0.76,1.37,1.83,2.44,3.19,3.22c1.37,0.77,2.8,1.16,4.3,1.17 c1.51,0.01,2.95-0.38,4.32-1.14c1.37-0.77,2.44-1.83,3.21-3.2c0.77-1.37,1.16-2.8,1.17-4.31c0-1.52-0.38-2.97-1.16-4.37 c-0.78-1.39-1.85-2.46-3.21-3.2C502.35,52.19,500.93,51.82,499.45,51.81z M494.51,66.23l0.04-11.44l2.33,0.01 c2.18,0.01,3.4,0.02,3.67,0.04c0.77,0.07,1.37,0.22,1.8,0.46c0.43,0.24,0.78,0.61,1.07,1.1c0.29,0.49,0.43,1.04,0.43,1.64 c0,0.83-0.28,1.53-0.82,2.12c-0.55,0.59-1.31,0.95-2.29,1.08c0.35,0.13,0.61,0.28,0.8,0.43c0.19,0.15,0.45,0.45,0.77,0.88 c0.08,0.11,0.37,0.58,0.84,1.39l1.36,2.31l-2.86-0.01l-0.96-1.86c-0.65-1.25-1.19-2.04-1.61-2.36c-0.42-0.32-0.95-0.49-1.6-0.49 l-0.61,0l-0.01,4.7L494.51,66.23z M496.86,59.73l0.95,0c1.35,0,2.18-0.05,2.51-0.15c0.32-0.1,0.58-0.28,0.77-0.54 c0.19-0.26,0.28-0.55,0.29-0.88c0-0.32-0.09-0.6-0.27-0.85c-0.18-0.25-0.44-0.43-0.78-0.54c-0.34-0.11-1.17-0.16-2.5-0.17l-0.95,0 L496.86,59.73z"/> </g> <polygon class="st1" points="75.72,132.98 75.7,46.61 50.31,9.45 37.95,9.42 38.02,55.48 51.73,75.4 51.73,35.29 61.97,50.31 61.97,106.97 23.19,50.03 8.16,50.02 8.15,132.72 33.59,169.9 45.89,169.9 45.9,123.28 32.16,103.35 32.16,144.06 21.9,129.09 21.9,72.2 63.41,132.96 75.72,132.98 75.72,132.98 "/> <path class="st2" d="M455.8,78.59h-5.31l0.08-9.69h5.2V55.42h13.38V68.9h6.51l-0.07,9.69h-6.39l-0.02,24.87 c-0.02,0.49,0.01,0.91,0.08,1.25c0.29,1.35,1.24,2.01,2.87,2.01c0.65-0.1,1.79-0.16,3.42-0.16l0,9.44c-3.43,0.5-6.3,0.76-8.6,0.76 c-6.13,0-9.73-2.53-10.81-7.58c-0.22-1.03-0.34-2.12-0.35-3.3V78.59L455.8,78.59z"/> <path class="st2" d="M423.13,68.9h12.48l0,7.15h0.15c1.73-5.66,5.17-8.49,10.34-8.49l0.01,15.16c-1.17-0.22-2.5-0.32-4.01-0.32 c-1.23,0-2.21,0.07-2.91,0.24c-1.81,0.45-2.71,1.91-2.69,4.38l0.03,29.06h-13.39L423.13,68.9L423.13,68.9z"/> <path class="st2" d="M416.74,94.69h-22.66l-0.02,8.26c0.01,0.56,0.06,1.07,0.15,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.29c0.7,11.72-5.13,17.66-17.5,17.85 c-0.16,0-0.34,0-0.51,0c-4.33,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.36-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,7.99,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L416.74,94.69L416.74,94.69z M394.06,85.85h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.15,0-4.72,2.11-4.72,6.32L394.06,85.85L394.06,85.85z"/> <path class="st2" d="M339.59,68.9h12.48l0.03,5.73h0.2c2.47-4.66,6.09-7.02,10.87-7.07c0.05,0,0.11,0,0.17,0 c5.73,0,9.33,3.48,10.81,10.45c0.38,1.8,0.56,3.71,0.54,5.71l-0.06,16.36c-0.05,11.39-3.95,17.23-11.71,17.52 c-0.04,0-0.13,0-0.24,0c-1.35,0-2.79-0.42-4.33-1.28c-2.02-1.07-3.75-2.64-5.19-4.71h-0.2L353,132h-13.38L339.59,68.9L339.59,68.9z M361.22,98.47l0.02-12.21c-0.01-1.91-0.12-3.34-0.32-4.3c-0.49-2.3-1.66-3.45-3.53-3.45c-2.92,0-4.38,2.78-4.38,8.34l0.02,11.11 c0.01,1.64,0.15,3.1,0.42,4.38c0.61,2.88,1.84,4.31,3.68,4.31c1.85,0,3.08-0.98,3.67-2.95 C361.11,102.68,361.24,100.94,361.22,98.47L361.22,98.47z"/> <polygon class="st2" points="320.87,68.9 334.27,68.9 323.77,92.49 334.61,116.08 321.2,116.08 316.88,102.53 316.73,102.53 312.45,116.08 298.7,116.08 309.78,92.49 299.21,68.9 312.52,68.9 316.51,82.13 316.69,82.13 320.87,68.9 "/> <polygon class="st2" points="293.22,116.08 258.24,116.08 258.22,52.89 292.28,52.89 292.24,65.52 273.13,65.52 273.07,77.17 291.62,77.17 291.6,89.79 273.07,89.79 273.08,103.45 293.23,103.45 293.22,116.08 "/> <path class="st2" d="M229.24,52.89l-0.05,19.7h0.15c2.67-3.36,6.05-5.04,10.15-5.04c2.7,0,4.98,0.73,6.85,2.17 c1.86,1.53,3.04,3.53,3.56,6c0.16,0.77,0.26,1.62,0.29,2.53l0.05,37.83h-13.42l0.06-33.53c0.01-0.67-0.03-1.24-0.12-1.69 c-0.33-1.57-1.57-2.36-3.7-2.36c-2.58,0-3.89,1.65-3.9,4.97l0.01,32.6h-13.41l-0.02-63.18H229.24L229.24,52.89z"/> <path class="st2" d="M207.75,86.42h-12.63l-0.09-0.84c-0.14-1.23,0.04-3.07-0.49-5.39c-0.46-2.04-1.9-2.95-3.66-2.95 c-2.64,0-4.02,1.91-4.01,5.71l0.03,19.46c0,0.8,0.08,1.5,0.21,2.12c0.48,2.25,1.87,3.37,4.17,3.37c2.13,0,3.44-1.38,3.91-4.13 c0.1-0.68,0.15-2.95,0.15-6.82h12.99c-0.01,5.05-0.37,8.79-1.09,11.2c-1.65,5.43-5.86,8.5-12.62,9.17 c-1.76,0.18-3.26,0.27-4.49,0.27c-9.33,0-14.73-3.48-16.21-10.45c-0.27-1.29-0.37-2.7-0.38-4.21l-0.06-19.22 c-0.04-10.77,5.52-16.16,16.35-16.16c0.06,0,0.11,0,0.17,0c9.95,0.05,15.71,3.76,17.27,11.1 C207.74,80.86,207.89,83.45,207.75,86.42L207.75,86.42z"/> <path class="st2" d="M166.57,94.69h-22.66l-0.02,8.26c0.01,0.56,0.06,1.07,0.16,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.3c0.7,11.72-5.13,17.66-17.5,17.85 c-0.15,0-0.34,0-0.51,0c-4.32,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.35-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,8,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L166.57,94.69L166.57,94.69z M143.88,85.85h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.14,0-4.72,2.11-4.72,6.32L143.88,85.85L143.88,85.85z"/> <polygon class="st2" points="89.11,65.52 89.14,52.89 127.68,52.89 127.64,65.52 115.7,65.52 115.74,116.08 100.81,116.08 100.86,65.52 89.11,65.52 "/> <g> <path class="st2" d="M217.01,149.64c-0.11,0.8-0.6,2.02-2.27,2.02c-1.73,0-2.65-1.47-2.65-3.5c0-3.61,2.01-3.72,2.58-3.72 c0.59,0,2.02,0.08,2.25,1.88h2.5c-0.08-1.59-1.05-3.98-4.88-3.98c-1.03,0-5.2,0.21-5.2,5.91c0,4.24,2.53,5.51,5.29,5.51 c3.83,0,4.74-2.5,4.91-4.13H217.01L217.01,149.64z"/> <path class="st2" d="M257.09,154.14c3.72,0,5.46-2.44,5.46-5.71c0-3.27-1.74-5.71-5.46-5.71c-4.26,0-5.46,3.19-5.46,5.71 C251.63,150.94,252.83,154.14,257.09,154.14L257.09,154.14z M257.09,152.04c-1.4,0-2.7-0.79-2.7-3.61c0-2.86,1.3-3.61,2.7-3.61 c2.61,0,2.72,2.64,2.72,3.61C259.8,149.34,259.68,152.04,257.09,152.04L257.09,152.04z"/> <polygon class="st2" points="299.19,153.77 300.92,153.77 303.62,146.05 303.67,146.05 303.67,153.77 306.21,153.77 306.21,142.96 302.63,142.96 300.06,150.38 297.48,142.96 293.9,142.96 293.9,153.77 296.45,153.77 296.45,146.05 296.49,146.05 299.19,153.77 "/> <path class="st2" d="M337.91,143.04v10.8h2.54v-3.72h2.42c1.31,0,4.13-0.22,4.13-3.6c0-2.67-1.88-3.49-4.07-3.49H337.91 L337.91,143.04z M340.46,145.14h1.99c0.57,0,1.82-0.06,1.82,1.4c0,1.05-0.62,1.48-1.82,1.48h-1.99V145.14L340.46,145.14z"/> <path class="st2" d="M380.45,142.8l-4.04,10.8h2.69l0.68-2.02h3.92l0.7,2.02h2.7l-4.06-10.8H380.45L380.45,142.8z M380.32,149.75 l1.42-4.12l1.39,4.12H380.32L380.32,149.75z"/> <polygon class="st2" points="421.5,146.93 425.75,153.69 428.35,153.69 428.35,142.89 425.8,142.89 425.8,149.6 425.75,149.6 421.5,142.89 418.92,142.89 418.92,153.69 421.46,153.69 421.46,146.93 421.5,146.93 "/> <polygon class="st2" points="464.29,147.77 462.01,143.09 459.1,143.09 463.01,149.82 463.01,153.89 465.57,153.89 465.57,149.82 469.35,143.09 466.58,143.09 464.29,147.77 "/> <path d="M143.5,145.13h-3.12v8.69h-2.44v-8.69h-3.15v-2.09h8.72V145.13z"/> <path d="M102.43,153.66h-2.45v-10.8h2.45V153.66z"/> </g> </g> <g class="st3"> <g class="st4"> <path class="st5" d="M422.77,706.67c1.85,0.01,3.62,0.47,5.31,1.4c1.7,0.93,3.03,2.26,3.99,3.98c0.96,1.73,1.45,3.54,1.44,5.42 c-0.01,1.88-0.49,3.66-1.45,5.36c-0.96,1.7-2.29,3.02-3.99,3.97c-1.7,0.95-3.5,1.42-5.37,1.41c-1.88-0.01-3.66-0.49-5.36-1.44 c-1.7-0.96-3.02-2.29-3.97-3.99c-0.95-1.7-1.42-3.49-1.41-5.37c0.01-1.88,0.5-3.69,1.47-5.41c0.98-1.72,2.31-3.04,4.02-3.96 C419.15,707.13,420.92,706.67,422.77,706.67z M422.78,708.78c-1.48,0-2.91,0.36-4.27,1.1c-1.36,0.74-2.44,1.8-3.22,3.18 c-0.79,1.39-1.18,2.84-1.19,4.36c0,1.51,0.37,2.95,1.13,4.32c0.76,1.37,1.83,2.44,3.19,3.22c1.37,0.77,2.8,1.16,4.3,1.17 c1.51,0.01,2.95-0.38,4.32-1.14c1.37-0.77,2.44-1.83,3.21-3.2c0.77-1.37,1.16-2.8,1.17-4.31c0-1.52-0.38-2.97-1.16-4.37 c-0.78-1.39-1.85-2.46-3.21-3.2C425.69,709.16,424.26,708.79,422.78,708.78z M417.85,723.19l0.04-11.44l2.33,0.01 c2.18,0.01,3.4,0.02,3.67,0.04c0.77,0.07,1.37,0.22,1.8,0.46c0.43,0.24,0.78,0.61,1.07,1.1c0.29,0.49,0.43,1.04,0.43,1.64 c0,0.83-0.28,1.53-0.82,2.12c-0.54,0.59-1.31,0.95-2.29,1.08c0.35,0.13,0.61,0.28,0.8,0.43c0.19,0.15,0.45,0.45,0.77,0.88 c0.08,0.11,0.37,0.58,0.84,1.39l1.36,2.31l-2.86-0.01l-0.96-1.86c-0.65-1.25-1.19-2.04-1.61-2.36c-0.42-0.32-0.96-0.49-1.6-0.49 l-0.61,0l-0.01,4.7L417.85,723.19z M420.19,716.7l0.95,0c1.35,0,2.18-0.04,2.51-0.15c0.32-0.1,0.58-0.28,0.77-0.54 c0.19-0.26,0.28-0.55,0.29-0.88c0-0.32-0.09-0.6-0.27-0.85c-0.18-0.25-0.44-0.43-0.78-0.54c-0.34-0.11-1.17-0.16-2.5-0.17l-0.95,0 L420.19,716.7z"/> </g> <polygon class="st6" points="-0.95,789.94 -0.97,703.58 -26.36,666.42 -38.72,666.38 -38.65,712.45 -24.93,732.37 -24.93,692.26 -14.69,707.27 -14.69,763.94 -53.48,707 -68.51,706.99 -68.52,789.69 -43.08,826.87 -30.78,826.87 -30.77,780.25 -44.5,760.32 -44.5,801.03 -54.77,786.05 -54.77,729.16 -13.25,789.93 -0.95,789.94 -0.95,789.94 "/> <path class="st7" d="M379.13,735.56h-5.31l0.08-9.69h5.2v-13.48h13.38v13.48H399l-0.07,9.69h-6.39l-0.02,24.87 c-0.02,0.49,0.01,0.91,0.08,1.25c0.29,1.35,1.24,2.01,2.87,2.01c0.65-0.1,1.79-0.16,3.42-0.16l0,9.44c-3.43,0.5-6.3,0.76-8.6,0.76 c-6.13,0-9.73-2.53-10.81-7.58c-0.22-1.03-0.34-2.12-0.35-3.3V735.56L379.13,735.56z"/> <path class="st7" d="M346.46,725.87h12.48l0,7.15h0.15c1.73-5.66,5.17-8.49,10.34-8.49l0.01,15.16c-1.17-0.22-2.5-0.32-4.01-0.32 c-1.23,0-2.21,0.07-2.91,0.24c-1.81,0.45-2.71,1.91-2.69,4.38l0.03,29.06h-13.39L346.46,725.87L346.46,725.87z"/> <path class="st7" d="M340.08,751.66h-22.66l-0.02,8.26c0.01,0.56,0.06,1.07,0.15,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.29c0.7,11.72-5.13,17.66-17.5,17.85 c-0.16,0-0.34,0-0.51,0c-4.33,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.36-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,7.99,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L340.08,751.66L340.08,751.66z M317.39,742.82h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.15,0-4.72,2.11-4.72,6.32L317.39,742.82L317.39,742.82z"/> <path class="st7" d="M262.93,725.87h12.48l0.03,5.73h0.2c2.47-4.66,6.09-7.02,10.87-7.07c0.05,0,0.11,0,0.17,0 c5.73,0,9.33,3.48,10.81,10.45c0.38,1.8,0.56,3.71,0.54,5.71l-0.06,16.36c-0.05,11.39-3.95,17.23-11.71,17.52 c-0.04,0-0.13,0-0.24,0c-1.35,0-2.79-0.42-4.33-1.28c-2.02-1.07-3.75-2.64-5.19-4.71h-0.2l0.04,20.39h-13.38L262.93,725.87 L262.93,725.87z M284.56,755.44l0.02-12.21c-0.01-1.91-0.12-3.34-0.32-4.3c-0.49-2.3-1.66-3.45-3.53-3.45 c-2.92,0-4.38,2.78-4.38,8.34l0.02,11.11c0.01,1.64,0.15,3.1,0.42,4.38c0.61,2.88,1.84,4.31,3.68,4.31c1.85,0,3.08-0.98,3.67-2.95 C284.44,759.65,284.58,757.91,284.56,755.44L284.56,755.44z"/> <polygon class="st7" points="244.2,725.87 257.6,725.87 247.1,749.46 257.94,773.05 244.53,773.05 240.22,759.5 240.06,759.5 235.78,773.05 222.04,773.05 233.11,749.46 222.54,725.87 235.85,725.87 239.84,739.09 240.02,739.09 244.2,725.87 "/> <polygon class="st7" points="216.55,773.05 181.58,773.05 181.56,709.86 215.61,709.86 215.58,722.49 196.47,722.49 196.4,734.14 214.95,734.14 214.94,746.76 196.41,746.76 196.42,760.42 216.56,760.42 216.55,773.05 "/> <path class="st7" d="M152.57,709.86l-0.05,19.7h0.15c2.67-3.36,6.05-5.04,10.15-5.04c2.7,0,4.98,0.73,6.85,2.17 c1.86,1.53,3.04,3.53,3.56,6c0.16,0.77,0.26,1.62,0.29,2.53l0.05,37.83h-13.42l0.06-33.53c0.01-0.67-0.03-1.24-0.12-1.69 c-0.33-1.57-1.57-2.36-3.7-2.36c-2.58,0-3.89,1.65-3.9,4.97l0.01,32.6h-13.41l-0.02-63.18H152.57L152.57,709.86z"/> <path class="st7" d="M131.09,743.39h-12.63l-0.09-0.84c-0.14-1.23,0.04-3.07-0.49-5.39c-0.46-2.04-1.9-2.95-3.66-2.95 c-2.64,0-4.02,1.91-4.01,5.71l0.03,19.46c0,0.8,0.08,1.5,0.21,2.12c0.48,2.25,1.87,3.37,4.17,3.37c2.13,0,3.44-1.38,3.91-4.13 c0.1-0.68,0.15-2.95,0.15-6.82h12.99c-0.01,5.05-0.37,8.79-1.09,11.2c-1.65,5.43-5.86,8.5-12.62,9.17 c-1.76,0.18-3.26,0.27-4.49,0.27c-9.32,0-14.72-3.48-16.21-10.45c-0.27-1.29-0.37-2.7-0.38-4.21l-0.06-19.22 c-0.04-10.77,5.52-16.16,16.35-16.16c0.06,0,0.11,0,0.17,0c9.95,0.05,15.71,3.76,17.27,11.1 C131.07,737.83,131.23,740.41,131.09,743.39L131.09,743.39z"/> <path class="st7" d="M89.91,751.66H67.24l-0.02,8.26c0.01,0.56,0.06,1.07,0.16,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.3c0.7,11.72-5.13,17.66-17.5,17.85 c-0.15,0-0.34,0-0.51,0c-4.32,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.35-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,8,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L89.91,751.66L89.91,751.66z M67.22,742.82h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.14,0-4.72,2.11-4.72,6.32L67.22,742.82L67.22,742.82z"/> <polygon class="st7" points="12.44,722.49 12.48,709.86 51.01,709.86 50.98,722.49 39.03,722.49 39.07,773.05 24.14,773.05 24.19,722.49 12.44,722.49 "/> <g class="st4"> <path class="st8" d="M140.34,806.61c-0.11,0.8-0.6,2.02-2.27,2.02c-1.73,0-2.65-1.47-2.65-3.5c0-3.61,2.01-3.72,2.58-3.72 c0.59,0,2.02,0.08,2.25,1.88h2.5c-0.08-1.59-1.05-3.98-4.88-3.98c-1.03,0-5.2,0.21-5.2,5.91c0,4.24,2.53,5.51,5.29,5.51 c3.83,0,4.74-2.5,4.91-4.13H140.34L140.34,806.61z"/> <path class="st8" d="M180.42,811.11c3.72,0,5.46-2.44,5.46-5.71s-1.74-5.71-5.46-5.71c-4.26,0-5.46,3.19-5.46,5.71 C174.96,807.91,176.16,811.11,180.42,811.11L180.42,811.11z M180.42,809.01c-1.4,0-2.7-0.79-2.7-3.61c0-2.86,1.3-3.61,2.7-3.61 c2.61,0,2.72,2.64,2.72,3.61C183.14,806.31,183.01,809.01,180.42,809.01L180.42,809.01z"/> <polygon class="st8" points="222.53,810.73 224.26,810.73 226.96,803.01 227,803.01 227,810.73 229.55,810.73 229.55,799.93 225.97,799.93 223.39,807.35 220.81,799.93 217.23,799.93 217.23,810.73 219.78,810.73 219.78,803.01 219.83,803.01 222.53,810.73 "/> <path class="st8" d="M261.25,800v10.8h2.54v-3.72h2.42c1.31,0,4.13-0.22,4.13-3.6c0-2.67-1.88-3.49-4.07-3.49H261.25L261.25,800z M263.79,802.1h1.99c0.57,0,1.82-0.06,1.82,1.4c0,1.05-0.62,1.48-1.82,1.48h-1.99V802.1L263.79,802.1z"/> <path class="st8" d="M303.78,799.77l-4.04,10.8h2.69l0.68-2.02h3.92l0.7,2.02h2.7l-4.06-10.8H303.78L303.78,799.77z M303.66,806.72l1.42-4.12l1.39,4.12H303.66L303.66,806.72z"/> <polygon class="st8" points="344.83,803.9 349.09,810.66 351.68,810.66 351.68,799.85 349.13,799.85 349.13,806.57 349.09,806.57 344.83,799.85 342.25,799.85 342.25,810.66 344.8,810.66 344.8,803.9 344.83,803.9 "/> <polygon class="st8" points="387.62,804.73 385.34,800.06 382.44,800.06 386.34,806.79 386.34,810.86 388.91,810.86 388.91,806.79 392.69,800.06 389.91,800.06 387.62,804.73 "/> <path class="st5" d="M66.84,802.1h-3.12v8.69h-2.44v-8.69h-3.15v-2.09h8.72V802.1z"/> <path class="st5" d="M25.76,810.63h-2.45v-10.8h2.45V810.63z"/> </g> </g> <g class="st3"> <g class="st4"> <path class="st5" d="M422.77,394.71c1.85,0.01,3.62,0.47,5.31,1.4c1.7,0.93,3.03,2.26,3.99,3.98c0.96,1.73,1.45,3.54,1.44,5.42 c-0.01,1.88-0.49,3.66-1.45,5.36c-0.96,1.7-2.29,3.02-3.99,3.97c-1.71,0.95-3.5,1.42-5.37,1.41c-1.88-0.01-3.66-0.49-5.36-1.44 c-1.7-0.96-3.02-2.29-3.97-3.99c-0.95-1.7-1.42-3.49-1.41-5.37c0.01-1.88,0.5-3.69,1.47-5.41c0.98-1.72,2.31-3.04,4.02-3.96 C419.14,395.16,420.92,394.7,422.77,394.71z M422.78,396.81c-1.48,0-2.91,0.36-4.27,1.1c-1.36,0.74-2.44,1.8-3.22,3.18 c-0.79,1.39-1.18,2.84-1.19,4.36c0,1.51,0.37,2.95,1.13,4.32c0.76,1.37,1.83,2.44,3.19,3.22c1.37,0.77,2.8,1.16,4.3,1.17 c1.51,0.01,2.95-0.38,4.32-1.14c1.37-0.77,2.44-1.83,3.21-3.2c0.77-1.37,1.16-2.8,1.17-4.31c0-1.52-0.38-2.97-1.16-4.37 c-0.78-1.39-1.85-2.46-3.21-3.2C425.68,397.2,424.26,396.82,422.78,396.81z M417.84,411.23l0.04-11.44l2.33,0.01 c2.18,0.01,3.4,0.02,3.67,0.04c0.77,0.07,1.37,0.22,1.8,0.46c0.43,0.24,0.78,0.61,1.07,1.1c0.29,0.49,0.43,1.04,0.43,1.64 c0,0.83-0.28,1.53-0.82,2.12c-0.54,0.59-1.31,0.95-2.29,1.08c0.35,0.13,0.61,0.28,0.8,0.43c0.19,0.15,0.45,0.45,0.77,0.88 c0.08,0.11,0.37,0.58,0.84,1.39l1.36,2.31l-2.86-0.01l-0.96-1.86c-0.65-1.25-1.19-2.04-1.61-2.36c-0.42-0.32-0.96-0.49-1.6-0.49 l-0.61,0l-0.01,4.7L417.84,411.23z M420.19,404.73l0.95,0c1.35,0,2.18-0.04,2.51-0.15c0.32-0.1,0.58-0.28,0.77-0.54 c0.19-0.26,0.28-0.55,0.29-0.88c0-0.32-0.09-0.6-0.27-0.85c-0.18-0.25-0.44-0.43-0.78-0.54c-0.34-0.11-1.17-0.16-2.5-0.17l-0.95,0 L420.19,404.73z"/> </g> <polygon class="st7" points="-0.95,477.98 -0.97,391.61 -26.36,354.45 -38.72,354.42 -38.65,400.48 -24.93,420.4 -24.93,380.29 -14.69,395.31 -14.69,451.97 -53.48,395.04 -68.51,395.02 -68.52,477.72 -43.08,514.9 -30.78,514.9 -30.77,468.28 -44.5,448.35 -44.5,489.06 -54.77,474.09 -54.77,417.2 -13.25,477.96 -0.95,477.98 -0.95,477.98 "/> <path class="st7" d="M379.13,423.59h-5.31l0.08-9.69h5.2v-13.48h13.38v13.48H399l-0.07,9.69h-6.39l-0.02,24.87 c-0.02,0.49,0.01,0.91,0.08,1.25c0.29,1.35,1.24,2.01,2.87,2.01c0.65-0.1,1.79-0.16,3.42-0.16l0,9.44c-3.43,0.5-6.3,0.76-8.6,0.76 c-6.13,0-9.73-2.53-10.81-7.58c-0.22-1.03-0.34-2.12-0.35-3.3V423.59L379.13,423.59z"/> <path class="st7" d="M346.46,413.9h12.48l0,7.15h0.15c1.73-5.66,5.17-8.49,10.34-8.49l0.01,15.16c-1.17-0.22-2.5-0.32-4.01-0.32 c-1.23,0-2.21,0.07-2.91,0.24c-1.81,0.45-2.71,1.91-2.69,4.38l0.03,29.06h-13.39L346.46,413.9L346.46,413.9z"/> <path class="st7" d="M340.07,439.69h-22.66l-0.02,8.26c0.01,0.56,0.06,1.07,0.15,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.29c0.7,11.72-5.13,17.66-17.5,17.85 c-0.16,0-0.34,0-0.51,0c-4.33,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.36-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,7.99,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L340.07,439.69L340.07,439.69z M317.39,430.85h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.15,0-4.72,2.11-4.72,6.32L317.39,430.85L317.39,430.85z"/> <path class="st7" d="M262.92,413.9h12.48l0.03,5.73h0.2c2.47-4.66,6.09-7.02,10.87-7.07c0.05,0,0.11,0,0.17,0 c5.73,0,9.33,3.48,10.81,10.45c0.38,1.8,0.56,3.7,0.54,5.71l-0.06,16.36c-0.05,11.39-3.95,17.23-11.71,17.52c-0.04,0-0.13,0-0.24,0 c-1.35,0-2.79-0.42-4.33-1.28c-2.02-1.07-3.75-2.64-5.19-4.71h-0.2l0.04,20.39h-13.38L262.92,413.9L262.92,413.9z M284.55,443.47 l0.02-12.21c-0.01-1.91-0.12-3.34-0.32-4.3c-0.49-2.3-1.66-3.45-3.53-3.45c-2.92,0-4.38,2.78-4.38,8.34l0.02,11.11 c0.01,1.64,0.15,3.1,0.42,4.38c0.61,2.88,1.84,4.31,3.68,4.31c1.85,0,3.08-0.98,3.67-2.95 C284.44,447.68,284.58,445.94,284.55,443.47L284.55,443.47z"/> <polygon class="st7" points="244.2,413.9 257.6,413.9 247.1,437.49 257.94,461.08 244.53,461.08 240.21,447.53 240.06,447.53 235.78,461.08 222.03,461.08 233.11,437.49 222.54,413.9 235.85,413.9 239.84,427.13 240.02,427.13 244.2,413.9 "/> <polygon class="st7" points="216.55,461.08 181.58,461.08 181.55,397.89 215.61,397.89 215.57,410.52 196.46,410.52 196.4,422.17 214.95,422.17 214.93,434.79 196.4,434.79 196.41,448.45 216.56,448.45 216.55,461.08 "/> <path class="st7" d="M152.57,397.89l-0.05,19.7h0.16c2.67-3.36,6.05-5.04,10.15-5.04c2.7,0,4.98,0.73,6.85,2.17 c1.86,1.53,3.04,3.53,3.56,6c0.16,0.77,0.26,1.62,0.29,2.53l0.05,37.83h-13.42l0.06-33.53c0.01-0.67-0.03-1.24-0.12-1.69 c-0.33-1.57-1.57-2.36-3.7-2.36c-2.58,0-3.89,1.65-3.9,4.97l0.01,32.6h-13.41l-0.02-63.18H152.57L152.57,397.89z"/> <path class="st7" d="M131.09,431.42h-12.64l-0.09-0.84c-0.14-1.23,0.04-3.07-0.49-5.39c-0.46-2.04-1.9-2.95-3.66-2.95 c-2.64,0-4.01,1.91-4.01,5.71l0.03,19.46c0,0.8,0.08,1.5,0.21,2.12c0.48,2.25,1.87,3.37,4.17,3.37c2.13,0,3.44-1.38,3.91-4.13 c0.1-0.68,0.15-2.95,0.15-6.82h12.99c-0.01,5.05-0.37,8.79-1.09,11.2c-1.65,5.43-5.86,8.5-12.62,9.17 c-1.76,0.18-3.26,0.27-4.49,0.27c-9.32,0-14.72-3.48-16.21-10.45c-0.27-1.29-0.37-2.7-0.38-4.21l-0.06-19.22 c-0.04-10.77,5.52-16.16,16.35-16.16c0.06,0,0.11,0,0.17,0c9.95,0.05,15.71,3.76,17.27,11.1 C131.07,425.86,131.23,428.45,131.09,431.42L131.09,431.42z"/> <path class="st7" d="M89.91,439.69H67.24l-0.02,8.26c0.01,0.56,0.06,1.07,0.16,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.3c0.7,11.72-5.13,17.66-17.5,17.85 c-0.15,0-0.34,0-0.51,0c-4.32,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.35-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,8,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L89.91,439.69L89.91,439.69z M67.22,430.85h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.14,0-4.72,2.11-4.72,6.32L67.22,430.85L67.22,430.85z"/> <polygon class="st7" points="12.44,410.52 12.48,397.89 51.01,397.89 50.98,410.52 39.03,410.52 39.07,461.08 24.14,461.08 24.19,410.52 12.44,410.52 "/> <g class="st4"> <path class="st8" d="M140.34,494.64c-0.11,0.8-0.6,2.02-2.27,2.02c-1.73,0-2.65-1.47-2.65-3.5c0-3.61,2.01-3.72,2.58-3.72 c0.59,0,2.02,0.08,2.25,1.88h2.5c-0.08-1.59-1.05-3.98-4.88-3.98c-1.03,0-5.2,0.21-5.2,5.91c0,4.24,2.53,5.51,5.29,5.51 c3.83,0,4.74-2.5,4.91-4.13H140.34L140.34,494.64z"/> <path class="st8" d="M180.42,499.14c3.72,0,5.46-2.44,5.46-5.71s-1.74-5.71-5.46-5.71c-4.26,0-5.46,3.19-5.46,5.71 S176.16,499.14,180.42,499.14L180.42,499.14z M180.42,497.04c-1.4,0-2.7-0.79-2.7-3.61c0-2.86,1.3-3.61,2.7-3.61 c2.61,0,2.72,2.64,2.72,3.61C183.14,494.34,183.01,497.04,180.42,497.04L180.42,497.04z"/> <polygon class="st8" points="222.52,498.77 224.25,498.77 226.95,491.05 227,491.05 227,498.77 229.55,498.77 229.55,487.96 225.97,487.96 223.39,495.38 220.81,487.96 217.23,487.96 217.23,498.77 219.78,498.77 219.78,491.05 219.82,491.05 222.52,498.77 "/> <path class="st8" d="M261.25,488.04v10.8h2.54v-3.72h2.42c1.31,0,4.13-0.22,4.13-3.6c0-2.67-1.88-3.49-4.07-3.49H261.25 L261.25,488.04z M263.79,490.14h1.99c0.57,0,1.82-0.06,1.82,1.4c0,1.05-0.62,1.48-1.82,1.48h-1.99V490.14L263.79,490.14z"/> <path class="st8" d="M303.78,487.8l-4.05,10.8h2.69l0.68-2.02h3.92l0.7,2.02h2.7l-4.06-10.8H303.78L303.78,487.8z M303.65,494.75 l1.42-4.12l1.39,4.12H303.65L303.65,494.75z"/> <polygon class="st8" points="344.83,491.93 349.09,498.69 351.68,498.69 351.68,487.89 349.13,487.89 349.13,494.6 349.09,494.6 344.83,487.89 342.25,487.89 342.25,498.69 344.8,498.69 344.8,491.93 344.83,491.93 "/> <polygon class="st8" points="387.62,492.77 385.34,488.09 382.43,488.09 386.34,494.82 386.34,498.89 388.9,498.89 388.9,494.82 392.68,488.09 389.91,488.09 387.62,492.77 "/> <path class="st5" d="M66.84,490.13h-3.12v8.69h-2.44v-8.69h-3.15v-2.09h8.72V490.13z"/> <path class="st5" d="M25.76,498.66h-2.45v-10.8h2.45V498.66z"/> </g> </g> </svg></span>
+      </a>
+      <nav class="nav-links">
+        <a href="#about-glpi">Про GLPI</a>
+        <a href="#advantages">Переваги</a>
+        <a href="#processes">Процеси</a>
+        <a href="#plugins">Плагіни</a>
+        <a href="#itrm">ITRM</a>
+        <a href="#expertise">Про нас</a>
+        <a href="#contact" class="btn btn-primary nav-cta">Консультація</a>
+      </nav>
+      <button class="hamburger" id="hamburger" aria-label="Меню">
+        <span></span><span></span><span></span>
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- Mobile Nav -->
+<nav class="mobile-nav" id="mobile-nav">
+  <a href="#about-glpi">Про GLPI</a>
+  <a href="#advantages">Переваги</a>
+  <a href="#processes">Процеси</a>
+  <a href="#plugins">Плагіни</a>
+  <a href="#itrm">ITRM</a>
+  <a href="#expertise">Про нас</a>
+  <a href="#faq">FAQ</a>
+  <a href="#contact" class="btn btn-primary">Замовити консультацію</a>
+</nav>
+
+<main>
+
+<!-- ===== HERO ===== -->
+<section id="hero">
+  <div class="hero-bg">
+    <div class="hero-grid"></div>
+    <div class="hero-dots"></div>
+    <div class="hero-blob hero-blob-1"></div>
+    <div class="hero-blob hero-blob-2"></div>
+  </div>
+  <div class="container">
+    <div class="hero-inner">
+      <div class="hero-text">
+        <div class="hero-badge fade-in">
+          <div class="hero-badge-dot"></div>
+          Офіційний партнер GLPI Network
+        </div>
+        <h1 class="hero-title fade-in fade-in-delay-1">
+          Автоматизація ІТ-служб на базі <span class="highlight">GLPI</span>
+        </h1>
+        <p class="hero-subtitle fade-in fade-in-delay-2">
+          Комплексне рішення від TechExpert для автоматизації ITSM-процесів, управління заявками, інвентаризацією та ризиками ІБ — відповідно до кращих практик ITIL.
+        </p>
+        <div class="hero-buttons fade-in fade-in-delay-3">
+          <a href="mailto:tsales@techexpert.ua?subject=Замовлення консультації" class="btn btn-accent btn-lg">
+            <i data-lucide="mail" style="width:18px;height:18px;"></i>
+            Замовити консультацію
+          </a>
+          <a href="#about-glpi" class="btn btn-outline btn-lg">
+            Дізнатися більше
+            <i data-lucide="arrow-down" style="width:16px;height:16px;"></i>
+          </a>
+        </div>
+        <div class="hero-stats fade-in fade-in-delay-4">
+          <div class="hero-stat">
+            <div class="hero-stat-value">25+</div>
+            <div class="hero-stat-label">років на ринку</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">100+</div>
+            <div class="hero-stat-label">впроваджень</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">10</div>
+            <div class="hero-stat-label">власних плагінів</div>
+          </div>
+          <div class="hero-stat">
+            <div class="hero-stat-value">45</div>
+            <div class="hero-stat-label">днів тріалу</div>
+          </div>
+        </div>
+      </div>
+      <div class="hero-visual fade-in-right">
+        <div class="hero-card-stack">
+          <div class="hero-main-card">
+            <div class="hero-card-header">
+              <div class="hero-card-icon">
+                <i data-lucide="layout-dashboard" style="width:22px;height:22px;color:#fff;"></i>
+              </div>
+              <div>
+                <div class="hero-card-title">Service Desk Portal</div>
+                <div class="hero-card-sub">GLPI · Powered by TechExpert</div>
+              </div>
+            </div>
+            <div class="ticket-list">
+              <div class="ticket-item">
+                <div class="ticket-dot green"></div>
+                <div class="ticket-text">#1042 — Налаштування VPN-доступу</div>
+                <span class="ticket-badge done">Виконано</span>
+              </div>
+              <div class="ticket-item">
+                <div class="ticket-dot blue"></div>
+                <div class="ticket-text">#1043 — Встановлення ПЗ на ПК бухгалтерії</div>
+                <span class="ticket-badge progress">В роботі</span>
+              </div>
+              <div class="ticket-item">
+                <div class="ticket-dot orange"></div>
+                <div class="ticket-text">#1044 — Збій сервера БД (Критичний)</div>
+                <span class="ticket-badge new">Нова</span>
+              </div>
+            </div>
+          </div>
+          <div class="hero-floating-card hfc-top">
+            <div class="hfc-mini">
+              <div class="hfc-mini-icon">
+                <i data-lucide="trending-up" style="width:14px;height:14px;color:#60B4FF;"></i>
+              </div>
+              <div>
+                <div class="hfc-label">SLA виконання</div>
+                <div class="hfc-value green">98.4%</div>
+              </div>
+            </div>
+          </div>
+          <div class="hero-floating-card hfc-bottom">
+            <div class="hfc-mini">
+              <div class="hfc-mini-icon">
+                <i data-lucide="clock" style="width:14px;height:14px;color:#60B4FF;"></i>
+              </div>
+              <div>
+                <div class="hfc-label">Сер. час реакції</div>
+                <div class="hfc-value">12 хв</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ABOUT GLPI ===== -->
+<section id="about-glpi">
+  <div class="container">
+    <div class="about-grid">
+      <div class="about-text fade-in-left">
+        <div class="section-tag">Платформа</div>
+        <h2 class="section-title">GLPI — розумне управління ІТ-інфраструктурою</h2>
+        <p>GLPI (Gestionnaire Libre de Parc Informatique) — це провідна відкрита платформа для управління ІТ-послугами та активами, якою користуються мільйони організацій по всьому світу.</p>
+        <p style="margin-top:14px;">Рішення дозволяє реалізувати процесний підхід в управлінні ІТ і автоматизувати всі ключові ITSM-процеси відповідно до бібліотеки ITIL.</p>
+        <div class="modules-chips">
+          <span class="chip">Service Desk / Helpdesk</span>
+          <span class="chip">Управління активами</span>
+          <span class="chip">CMDB</span>
+          <span class="chip">Управління SLA</span>
+          <span class="chip">Фінансове управління</span>
+          <span class="chip">Управління змінами</span>
+          <span class="chip">База знань</span>
+          <span class="chip">Моніторинг</span>
+          <span class="chip">Мобільний застосунок</span>
+          <span class="chip">Agentless Inventory</span>
+        </div>
+        <a href="mailto:tsales@techexpert.ua?subject=Демонстрація GLPI" class="btn btn-primary">
+          <i data-lucide="play-circle" style="width:18px;height:18px;"></i>
+          Замовити демонстрацію
+        </a>
+      </div>
+      <div class="about-stats fade-in-right">
+        <div class="about-screenshot-wrap">
+          <div class="browser-mock">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <div class="browser-dot r"></div>
+                <div class="browser-dot y"></div>
+                <div class="browser-dot g"></div>
+              </div>
+              <div class="browser-url">glpi.mycompany.ua/front/central.php</div>
+            </div>
+            <div class="browser-body">
+              <div class="glpi-shell">
+                <div class="glpi-sidebar">
+                  <div class="glpi-sidebar-logo">
+                    <div class="glpi-logo-dot">G</div>
+                    GLPI
+                  </div>
+                  <div class="glpi-nav-item active">
+                    <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+                    Дашборд
+                  </div>
+                  <div class="glpi-nav-item">
+                    <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+                    Заявки
+                  </div>
+                  <div class="glpi-nav-item">
+                    <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 7h6M5 10h4"/></svg>
+                    Активи
+                  </div>
+                  <div class="glpi-nav-item">
+                    <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M8 2l2 4h4l-3 3 1 4-4-2-4 2 1-4-3-3h4z"/></svg>
+                    Проблеми
+                  </div>
+                  <div class="glpi-nav-item">
+                    <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h12M4 9h8M6 6h4M8 3v0"/></svg>
+                    Звіти
+                  </div>
+                  <div class="glpi-nav-item">
+                    <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="6" r="3"/><path d="M2 14c0-3.3 2.7-6 6-6s6 2.7 6 6"/></svg>
+                    Користувачі
+                  </div>
+                  <div class="glpi-nav-item">
+                    <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="3"/><path d="M8 1v2M8 13v2M1 8h2M13 8h2M3.5 3.5l1.4 1.4M11.1 11.1l1.4 1.4M3.5 12.5l1.4-1.4M11.1 4.9l1.4-1.4"/></svg>
+                    Налаштування
+                  </div>
+                </div>
+                <div class="glpi-main">
+                  <div class="glpi-topbar">
+                    <div class="glpi-topbar-title">Дашборд — Огляд</div>
+                    <div class="glpi-topbar-actions">
+                      <div class="glpi-btn-sm outline">+ Фільтр</div>
+                      <div class="glpi-btn-sm">Нова заявка</div>
+                    </div>
+                  </div>
+                  <div class="glpi-content">
+                    <div class="glpi-stat-row">
+                      <div class="glpi-stat-w blue">
+                        <div class="glpi-stat-w-val">127</div>
+                        <div class="glpi-stat-w-label">Відкрито заявок</div>
+                      </div>
+                      <div class="glpi-stat-w green">
+                        <div class="glpi-stat-w-val">98%</div>
+                        <div class="glpi-stat-w-label">SLA виконання</div>
+                      </div>
+                      <div class="glpi-stat-w orange">
+                        <div class="glpi-stat-w-val">12</div>
+                        <div class="glpi-stat-w-label">Прострочено</div>
+                      </div>
+                      <div class="glpi-stat-w">
+                        <div class="glpi-stat-w-val">1 842</div>
+                        <div class="glpi-stat-w-label">Активів обліку</div>
+                      </div>
+                    </div>
+                    <div class="glpi-chart-row">
+                      <div class="glpi-chart-w">
+                        <div class="glpi-chart-title">Заявки по тижнях</div>
+                        <div class="glpi-bar-chart">
+                          <div class="glpi-bar" style="height:60%"></div>
+                          <div class="glpi-bar" style="height:80%"></div>
+                          <div class="glpi-bar" style="height:45%"></div>
+                          <div class="glpi-bar" style="height:95%"></div>
+                          <div class="glpi-bar" style="height:70%"></div>
+                          <div class="glpi-bar" style="height:55%"></div>
+                          <div class="glpi-bar" style="height:88%"></div>
+                        </div>
+                      </div>
+                      <div class="glpi-chart-w" style="text-align:center;">
+                        <div class="glpi-chart-title">Розподіл по категоріях</div>
+                        <div class="glpi-donut"></div>
+                        <div style="display:flex;gap:8px;justify-content:center;margin-top:6px;flex-wrap:wrap;">
+                          <span style="font-size:0.55rem;color:#0077CC;">● ПЗ 42%</span>
+                          <span style="font-size:0.55rem;color:#22c55e;">● Залізо 26%</span>
+                          <span style="font-size:0.55rem;color:#f59e0b;">● Мережа 17%</span>
+                          <span style="font-size:0.55rem;color:#9ca3af;">● Інше 15%</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="screenshot-caption-light">Дашборд GLPI — повний огляд ІТ-процесів в реальному часі</p>
+        </div>
+        <!-- Keep stats below -->
+        <div class="stats-grid" style="margin-top:28px;">
+          <div class="stat-card">
+            <div class="stat-number counter" data-target="5" data-suffix="М+">0</div>
+            <div class="stat-label">Користувачів по всьому світу</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number counter" data-target="14" data-suffix="+">0</div>
+            <div class="stat-label">Функціональних модулів в одній платформі</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number counter" data-target="45" data-suffix=" днів">0</div>
+            <div class="stat-label">Безкоштовного тріалу</div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-number" style="font-size:1.4rem;">Open Source</div>
+            <div class="stat-label">Без vendor lock-in та прихованих платежів</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ADVANTAGES ===== -->
+<section id="advantages">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <div class="section-tag">Переваги</div>
+      <h2 class="section-title">Чому GLPI — найкращий вибір для вашого підприємства?</h2>
+      <p class="section-subtitle">Кожна функція системи вирішує конкретні бізнес-задачі, а не просто закриває технічний чекліст.</p>
+    </div>
+    <div class="cards-grid">
+      <div class="feature-card fade-in fade-in-delay-1">
+        <div class="card-icon">
+          <i data-lucide="eye" style="width:24px;height:24px;color:var(--primary);"></i>
+        </div>
+        <h3>Прозорість</h3>
+        <p>Всі заявки та їх статуси доступні ініціаторам у режимі реального часу. Ніяких зайвих дзвінків у службу підтримки.</p>
+      </div>
+      <div class="feature-card fade-in fade-in-delay-2">
+        <div class="card-icon">
+          <i data-lucide="zap" style="width:24px;height:24px;color:var(--primary);"></i>
+        </div>
+        <h3>Оперативність</h3>
+        <p>Заявки з високою терміновістю миттєво надходять виконавцям. Пріоритети та терміни регулюються автоматично.</p>
+      </div>
+      <div class="feature-card fade-in fade-in-delay-3">
+        <div class="card-icon">
+          <i data-lucide="users" style="width:24px;height:24px;color:var(--primary);"></i>
+        </div>
+        <h3>Самостійність користувачів</h3>
+        <p>База знань та портал самообслуговування дозволяють вирішувати типові питання без залучення ІТ-спеціаліста.</p>
+      </div>
+      <div class="feature-card fade-in fade-in-delay-1">
+        <div class="card-icon">
+          <i data-lucide="bar-chart-2" style="width:24px;height:24px;color:var(--primary);"></i>
+        </div>
+        <h3>Простежуваність</h3>
+        <p>Повна історія кожної заявки, аналітика продуктивності, KPI та звіти для керівництва в будь-який момент.</p>
+      </div>
+      <div class="feature-card fade-in fade-in-delay-2">
+        <div class="card-icon">
+          <i data-lucide="unlock" style="width:24px;height:24px;color:var(--primary);"></i>
+        </div>
+        <h3>Відкритість та гнучкість</h3>
+        <p>Open source з сотнями плагінів. Гнучке налаштування під будь-які бізнес-процеси без переплат за ліцензії.</p>
+      </div>
+      <div class="feature-card fade-in fade-in-delay-3">
+        <div class="card-icon">
+          <i data-lucide="link" style="width:24px;height:24px;color:var(--primary);"></i>
+        </div>
+        <h3>Інтеграційність</h3>
+        <p>Легко інтегрується з AD/LDAP, IP-телефонією, поштовими системами та іншими корпоративними інструментами.</p>
+      </div>
+    </div>
+
+    <!-- Screenshot: Asset Inventory -->
+    <div class="advantages-screenshot-wrap fade-in">
+      <div class="adv-screenshot-grid">
+        <div class="adv-screenshot-text">
+          <div class="section-tag">Інвентаризація</div>
+          <h3>Повний облік ІТ-активів у єдиній системі</h3>
+          <p>GLPI автоматично збирає дані про всі пристрої в мережі. Агентна та безагентна інвентаризація — жодного пристрою не пропустите. Повний зв'язок між активами та заявками.</p>
+          <ul>
+            <li>Автоматичне виявлення пристроїв у мережі</li>
+            <li>Облік ліцензій та програмного забезпечення</li>
+            <li>Зв'язок активів із заявками та інцидентами</li>
+            <li>Звіти щодо зносу та планування закупівель</li>
+          </ul>
+        </div>
+        <div>
+          <div class="browser-mock">
+            <div class="browser-bar">
+              <div class="browser-dots">
+                <div class="browser-dot r"></div><div class="browser-dot y"></div><div class="browser-dot g"></div>
+              </div>
+              <div class="browser-url">glpi.mycompany.ua/front/computer.php</div>
+            </div>
+            <div class="browser-body">
+              <div class="glpi-shell">
+                <div class="glpi-sidebar">
+                  <div class="glpi-sidebar-logo"><div class="glpi-logo-dot">G</div> GLPI</div>
+                  <div class="glpi-nav-item"><svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>Дашборд</div>
+                  <div class="glpi-nav-item"><svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>Заявки</div>
+                  <div class="glpi-nav-item active"><svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 7h6M5 10h4"/></svg>Активи</div>
+                  <div class="glpi-nav-item" style="padding-left:24px;font-size:0.68rem;">↳ Комп'ютери</div>
+                  <div class="glpi-nav-item" style="padding-left:24px;font-size:0.68rem;">↳ Сервери</div>
+                  <div class="glpi-nav-item" style="padding-left:24px;font-size:0.68rem;">↳ Принтери</div>
+                  <div class="glpi-nav-item" style="padding-left:24px;font-size:0.68rem;">↳ Ліцензії ПЗ</div>
+                </div>
+                <div class="glpi-main">
+                  <div class="glpi-topbar">
+                    <div class="glpi-topbar-title">Комп'ютери — 1 842 пристроїв</div>
+                    <div class="glpi-topbar-actions"><div class="glpi-btn-sm outline">Імпорт</div><div class="glpi-btn-sm">+ Додати</div></div>
+                  </div>
+                  <div class="glpi-content" style="padding-top:8px;">
+                    <div class="glpi-table">
+                      <div class="glpi-table-head" style="grid-template-columns:28px 1fr 80px 70px 50px;">
+                        <div></div><div>Назва / Модель</div><div>Розташування</div><div>Користувач</div><div>●</div>
+                      </div>
+                      <div class="glpi-asset-row" style="grid-template-columns:28px 1fr 80px 70px 50px;">
+                        <div class="glpi-asset-icon">💻</div>
+                        <div class="glpi-asset-name">PC-ACCOUNTING-01<span>Dell OptiPlex 7090 · SN: 5XK3R2</span></div>
+                        <div style="font-size:0.6rem;color:#6b7280;">Бух., каб. 201</div>
+                        <div class="glpi-assignee"><div class="glpi-avatar">КО</div>Коваль О.</div>
+                        <div><div class="glpi-status-dot online"></div></div>
+                      </div>
+                      <div class="glpi-asset-row" style="grid-template-columns:28px 1fr 80px 70px 50px;">
+                        <div class="glpi-asset-icon">🖥️</div>
+                        <div class="glpi-asset-name">SRV-DB-MAIN<span>HP ProLiant DL380 · SN: 8MN4T9</span></div>
+                        <div style="font-size:0.6rem;color:#6b7280;">Серверна</div>
+                        <div class="glpi-assignee"><div class="glpi-avatar" style="background:#ea580c;">ІТ</div>ІТ-відділ</div>
+                        <div><div class="glpi-status-dot warn"></div></div>
+                      </div>
+                      <div class="glpi-asset-row" style="grid-template-columns:28px 1fr 80px 70px 50px;">
+                        <div class="glpi-asset-icon">🖨️</div>
+                        <div class="glpi-asset-name">PRT-OFFICE-03<span>Kyocera ECOSYS M3145dn</span></div>
+                        <div style="font-size:0.6rem;color:#6b7280;">Офіс, 3 пов.</div>
+                        <div class="glpi-assignee">Загальний</div>
+                        <div><div class="glpi-status-dot online"></div></div>
+                      </div>
+                      <div class="glpi-asset-row" style="grid-template-columns:28px 1fr 80px 70px 50px;">
+                        <div class="glpi-asset-icon">🌐</div>
+                        <div class="glpi-asset-name">SW-CORE-01<span>Cisco Catalyst 2960X · rack-01</span></div>
+                        <div style="font-size:0.6rem;color:#6b7280;">Серверна</div>
+                        <div class="glpi-assignee">Мережа</div>
+                        <div><div class="glpi-status-dot online"></div></div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+          <p class="screenshot-caption-light">Облік активів GLPI — кожен пристрій під контролем</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== PROCESSES ===== -->
+<section id="processes">
+  <div class="container">
+    <div class="section-header section-dark centered fade-in">
+      <div class="section-tag">Автоматизація</div>
+      <h2 class="section-title">Які ІТ-процеси можна автоматизувати?</h2>
+      <p class="section-subtitle">GLPI охоплює повний цикл управління ІТ-послугами — від заявки до аналітики.</p>
+    </div>
+    <div class="processes-grid">
+      <div class="process-item fade-in fade-in-delay-1">
+        <div class="process-icon"><i data-lucide="alert-circle" style="width:20px;height:20px;"></i></div>
+        <div>
+          <div class="process-title">Управління інцидентами</div>
+          <div class="process-desc">Реєстрація, розподіл, контроль виконання та ескалація</div>
+        </div>
+      </div>
+      <div class="process-item fade-in fade-in-delay-2">
+        <div class="process-icon"><i data-lucide="search" style="width:20px;height:20px;"></i></div>
+        <div>
+          <div class="process-title">Управління проблемами</div>
+          <div class="process-desc">Виявлення першопричин, профілактика повторних інцидентів</div>
+        </div>
+      </div>
+      <div class="process-item fade-in fade-in-delay-3">
+        <div class="process-icon"><i data-lucide="database" style="width:20px;height:20px;"></i></div>
+        <div>
+          <div class="process-title">Управління конфігураціями (CMDB)</div>
+          <div class="process-desc">Єдина база конфігураційних одиниць та їх взаємозв'язків</div>
+        </div>
+      </div>
+      <div class="process-item fade-in fade-in-delay-4">
+        <div class="process-icon"><i data-lucide="git-merge" style="width:20px;height:20px;"></i></div>
+        <div>
+          <div class="process-title">Управління змінами</div>
+          <div class="process-desc">Планування, погодження та контрольоване впровадження змін</div>
+        </div>
+      </div>
+      <div class="process-item fade-in fade-in-delay-1">
+        <div class="process-icon"><i data-lucide="clock" style="width:20px;height:20px;"></i></div>
+        <div>
+          <div class="process-title">Управління рівнем послуг (SLA)</div>
+          <div class="process-desc">Автоматичний контроль дотримання угод про рівень сервісу</div>
+        </div>
+      </div>
+      <div class="process-item fade-in fade-in-delay-2">
+        <div class="process-icon"><i data-lucide="book-open" style="width:20px;height:20px;"></i></div>
+        <div>
+          <div class="process-title">База знань</div>
+          <div class="process-desc">Самообслуговування для користувачів, накопичення досвіду</div>
+        </div>
+      </div>
+      <div class="process-item fade-in fade-in-delay-3">
+        <div class="process-icon"><i data-lucide="monitor" style="width:20px;height:20px;"></i></div>
+        <div>
+          <div class="process-title">Інвентаризація обладнання та ПЗ</div>
+          <div class="process-desc">Агентна та безагентна інвентаризація всіх ІТ-активів</div>
+        </div>
+      </div>
+      <div class="process-item fade-in fade-in-delay-4">
+        <div class="process-icon"><i data-lucide="dollar-sign" style="width:20px;height:20px;"></i></div>
+        <div>
+          <div class="process-title">Управління бюджетами та ліцензіями</div>
+          <div class="process-desc">Фінансовий облік ІТ-активів, контроль витрат та ліцензій</div>
+        </div>
+      </div>
+    </div>
+    <div style="text-align:center;">
+      <div class="itil-badge fade-in">
+        <i data-lucide="check-circle" style="width:16px;height:16px;"></i>
+        Рішення узгоджується з кращими практиками бібліотеки <strong>ITIL</strong>
+      </div>
+    </div>
+
+    <!-- Screenshot: Ticket Management -->
+    <div class="processes-screenshot fade-in">
+      <div class="browser-mock">
+        <div class="browser-bar">
+          <div class="browser-dots">
+            <div class="browser-dot r"></div>
+            <div class="browser-dot y"></div>
+            <div class="browser-dot g"></div>
+          </div>
+          <div class="browser-url">glpi.mycompany.ua/front/ticket.php</div>
+        </div>
+        <div class="browser-body">
+          <div class="glpi-shell">
+            <div class="glpi-sidebar">
+              <div class="glpi-sidebar-logo">
+                <div class="glpi-logo-dot">G</div>
+                GLPI
+              </div>
+              <div class="glpi-nav-item">
+                <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="currentColor"><rect x="1" y="1" width="6" height="6" rx="1"/><rect x="9" y="1" width="6" height="6" rx="1"/><rect x="1" y="9" width="6" height="6" rx="1"/><rect x="9" y="9" width="6" height="6" rx="1"/></svg>
+                Дашборд
+              </div>
+              <div class="glpi-nav-item active">
+                <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><circle cx="8" cy="8" r="6"/><path d="M8 5v3l2 2"/></svg>
+                Заявки
+              </div>
+              <div class="glpi-nav-item" style="padding-left:24px;font-size:0.68rem;">↳ Інциденти</div>
+              <div class="glpi-nav-item" style="padding-left:24px;font-size:0.68rem;">↳ Проблеми</div>
+              <div class="glpi-nav-item" style="padding-left:24px;font-size:0.68rem;">↳ Зміни</div>
+              <div class="glpi-nav-item">
+                <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><rect x="2" y="3" width="12" height="10" rx="1"/><path d="M5 7h6M5 10h4"/></svg>
+                Активи
+              </div>
+              <div class="glpi-nav-item">
+                <svg class="glpi-nav-icon" viewBox="0 0 16 16" fill="none" stroke="currentColor" stroke-width="1.5"><path d="M2 12h12M4 9h8M6 6h4M8 3v0"/></svg>
+                Звіти
+              </div>
+            </div>
+            <div class="glpi-main">
+              <div class="glpi-topbar">
+                <div class="glpi-topbar-title">Заявки — Всі інциденти (127)</div>
+                <div class="glpi-topbar-actions">
+                  <div class="glpi-btn-sm outline">Фільтр ▾</div>
+                  <div class="glpi-btn-sm outline">Експорт</div>
+                  <div class="glpi-btn-sm">+ Нова</div>
+                </div>
+              </div>
+              <div class="glpi-content" style="padding-top:8px;">
+                <div class="glpi-table">
+                  <div class="glpi-table-head">
+                    <div>#</div>
+                    <div>Назва заявки / Ініціатор</div>
+                    <div>Статус</div>
+                    <div>Пріоритет</div>
+                    <div>SLA</div>
+                  </div>
+                  <div class="glpi-table-row">
+                    <div class="glpi-ticket-id">#1044</div>
+                    <div class="glpi-ticket-title">Збій основного сервера БД<span>Петренко І. · ІТ-відділ</span></div>
+                    <div><span class="glpi-badge-sm new">Нова</span></div>
+                    <div><span class="glpi-badge-sm high">Критичний</span></div>
+                    <div class="glpi-sla-warn">00:45</div>
+                  </div>
+                  <div class="glpi-table-row">
+                    <div class="glpi-ticket-id">#1043</div>
+                    <div class="glpi-ticket-title">Встановлення MS Office на ПК №47<span>Коваль О. · Бухгалтерія</span></div>
+                    <div><span class="glpi-badge-sm progress">В роботі</span></div>
+                    <div><span class="glpi-badge-sm medium">Середній</span></div>
+                    <div class="glpi-sla-ok">04:20</div>
+                  </div>
+                  <div class="glpi-table-row">
+                    <div class="glpi-ticket-id">#1042</div>
+                    <div class="glpi-ticket-title">Налаштування VPN для нового співробітника<span>Мельник Т. · HR</span></div>
+                    <div><span class="glpi-badge-sm done">Виконано</span></div>
+                    <div><span class="glpi-badge-sm low">Низький</span></div>
+                    <div class="glpi-sla-ok">✓</div>
+                  </div>
+                  <div class="glpi-table-row">
+                    <div class="glpi-ticket-id">#1041</div>
+                    <div class="glpi-ticket-title">Повільна робота 1С: Підприємство<span>Шевченко В. · Фінанси</span></div>
+                    <div><span class="glpi-badge-sm progress">В роботі</span></div>
+                    <div><span class="glpi-badge-sm medium">Середній</span></div>
+                    <div class="glpi-sla-ok">02:10</div>
+                  </div>
+                  <div class="glpi-table-row">
+                    <div class="glpi-ticket-id">#1040</div>
+                    <div class="glpi-ticket-title">Заміна принтера в переговорній кімнаті<span>Бойко С. · АГС</span></div>
+                    <div><span class="glpi-badge-sm wait">Очікування</span></div>
+                    <div><span class="glpi-badge-sm low">Низький</span></div>
+                    <div class="glpi-sla-ok">08:00</div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+      <p class="screenshot-caption">Управління заявками в GLPI — повний контроль над кожним зверненням</p>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA #1 ===== -->
+<div class="cta-section">
+  <div class="container">
+    <div class="cta-inner fade-in">
+      <h2 class="cta-title">Хочете побачити GLPI в дії?</h2>
+      <p class="cta-subtitle">Замовте безкоштовну демонстрацію прямо зараз — покажемо можливості системи на реальних прикладах.</p>
+      <div class="cta-buttons">
+        <a href="mailto:tsales@techexpert.ua?subject=Запит на демонстрацію GLPI" class="btn btn-accent btn-lg">
+          <i data-lucide="mail" style="width:18px;height:18px;"></i>
+          Написати листа
+        </a>
+      </div>
+      <p class="cta-note">або зателефонуйте: <a href="tel:+380445960068" style="color:#fff;font-weight:600;">+38 (044) 596-00-68</a></p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== PLUGINS ===== -->
+<section id="plugins">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <div class="section-tag">Розширення</div>
+      <h2 class="section-title">Унікальні плагіни TechExpert — розширюйте GLPI до максимуму</h2>
+      <p class="section-subtitle">Компанія TechExpert розробила власні модулі-розширення для GLPI, що вирішують реальні задачі бізнесу. Вони перевірені в реальних проєктах та готові до впровадження.</p>
+    </div>
+    <div class="plugins-grid">
+      <div class="plugin-card fade-in fade-in-delay-1">
+        <span class="plugin-icon">🤖</span>
+        <h3>AI Assistant for GLPI</h3>
+        <p>Штучний інтелект для автоматичної обробки звернень: чат-асистент, автоматичне створення заявок, переклад та підтримка на рівні користувача.</p>
+      </div>
+      <div class="plugin-card fade-in fade-in-delay-2">
+        <span class="plugin-icon">📱</span>
+        <h3>Telegram-бот для GLPI</h3>
+        <p>Миттєві сповіщення про зміну статусу заявок та нові призначення через Telegram — без необхідності входити в систему.</p>
+      </div>
+      <div class="plugin-card fade-in fade-in-delay-3">
+        <span class="plugin-icon">🔀</span>
+        <h3>Бізнес-процеси (GLPI Processes)</h3>
+        <p>Налаштування складних бізнес-процесів з етапністю, паралельними гілками та різними виконавчими групами.</p>
+      </div>
+      <div class="plugin-card fade-in fade-in-delay-1">
+        <span class="plugin-icon">📞</span>
+        <h3>Asterisk Connector</h3>
+        <p>Інтеграція з IP-телефонією Asterisk: автоматична реєстрація заявок на вхідні та вихідні дзвінки, контроль статусу викликів.</p>
+      </div>
+      <div class="plugin-card fade-in fade-in-delay-2">
+        <span class="plugin-icon">🛡️</span>
+        <h3>ITRM (IT Risk Manager)</h3>
+        <p>Система управління ризиками інформаційної безпеки за міжнародними стандартами. Власна розробка TechExpert.</p>
+      </div>
+      <div class="plugin-card fade-in fade-in-delay-3">
+        <span class="plugin-icon">📋</span>
+        <h3>Додаткові поля</h3>
+        <p>Кастомні поля у формах заявок із динамічним відображенням залежно від категорії звернення.</p>
+      </div>
+      <div class="plugin-card fade-in fade-in-delay-1">
+        <span class="plugin-icon">📈</span>
+        <h3>Розширена звітність</h3>
+        <p>KPI-звіти, оцінка ефективності співробітників, вивантаження до .XLS для подальшого аналізу в Excel.</p>
+      </div>
+      <div class="plugin-card fade-in fade-in-delay-2">
+        <span class="plugin-icon">🎫</span>
+        <h3>Розширена робота із заявками</h3>
+        <p>Лічильники, підсвітка, автоматичні статуси та каталог сервісів — підвищення продуктивності обробки звернень.</p>
+      </div>
+      <div class="plugin-card fade-in fade-in-delay-3">
+        <span class="plugin-icon">🔔</span>
+        <h3>Управління сповіщеннями</h3>
+        <p>Гнучке планування та відправка повідомлень із налаштуванням змінних та можливістю зворотного зв'язку.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== ITRM ===== -->
+<section id="itrm">
+  <div class="container">
+    <div class="itrm-inner">
+      <div class="itrm-header fade-in">
+        <div class="itrm-badge">
+          <i data-lucide="shield" style="width:14px;height:14px;"></i>
+          Власна розробка TechExpert
+        </div>
+        <h2 class="itrm-title">ITRM — Система автоматизації управління ризиками ІБ</h2>
+        <p class="itrm-subtitle">Спільна розробка TechExpert & Агентство Активного Аудиту</p>
+        <p class="itrm-desc">Система ITRM (IT Risk Manager) — готовий інструмент для оцінки та керування ризиками ІБ відповідно до вимог міжнародних стандартів. Реалізована на базі GLPI. Не потребує встановлення клієнтських додатків — достатньо браузера.</p>
+      </div>
+      <div class="itrm-content">
+        <div class="itrm-col fade-in fade-in-delay-1">
+          <div class="itrm-col-title">
+            <i data-lucide="list-checks" style="width:18px;height:18px;"></i>
+            Ключові функції системи
+          </div>
+          <ul class="itrm-list">
+            <li>Централізоване зберігання даних про активи, вразливості та загрози</li>
+            <li>Оцінка ризиків для кожного інформаційного активу за міжнародними стандартами</li>
+            <li>Розробка плану обробки ризиків та призначення завдань виконавцям</li>
+            <li>Розмежування прав доступу за рольовою моделлю</li>
+            <li>Одночасна робота кількох користувачів при проведенні оцінки</li>
+            <li>Сповіщення власників активів про зміни оцінки</li>
+            <li>Побудова аналітичних звітів, експорт до Excel</li>
+            <li>Повна аудиторська історія всіх дій в системі</li>
+          </ul>
+        </div>
+        <div class="itrm-col fade-in fade-in-delay-2">
+          <div class="itrm-col-title">
+            <i data-lucide="star" style="width:18px;height:18px;"></i>
+            Переваги для бізнесу
+          </div>
+          <ul class="itrm-list">
+            <li><strong style="color:rgba(255,255,255,0.9);">Для служби ІБ:</strong> систематизація активів, зменшення часу на оцінку ризиків, єдиний інформаційний простір</li>
+            <li><strong style="color:rgba(255,255,255,0.9);">Для компанії:</strong> економічно виправдана ІБ, захист вразливих сфер</li>
+            <li>Підвищення конкурентоспроможності за рахунок відповідності стандартам</li>
+            <li>Зниження ризику штрафів і витоків даних</li>
+            <li>Готовність до зовнішніх аудитів та перевірок</li>
+          </ul>
+        </div>
+      </div>
+      <div class="itrm-footer fade-in">
+        <div>
+          <div class="itrm-price-label">Вартість рішення</div>
+          <div class="itrm-price"><span>€3 000</span> <small style="font-size:0.9rem;color:rgba(255,255,255,0.4);">без ПДВ</small></div>
+        </div>
+        <div>
+          <div class="itrm-price-label">Інтеграції</div>
+          <div class="itrm-integrations">
+            <span class="int-badge">AD/LDAP</span>
+            <span class="int-badge">Email</span>
+            <span class="int-badge">Asterisk</span>
+            <span class="int-badge">Cisco</span>
+            <span class="int-badge">GLPI</span>
+          </div>
+        </div>
+        <div>
+          <a href="mailto:tsales@techexpert.ua?subject=Запит про ITRM" class="btn btn-accent btn-lg">
+            <i data-lucide="shield" style="width:18px;height:18px;"></i>
+            Дізнатися більше про ITRM
+          </a>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CTA #2 ===== -->
+<div class="cta-section" style="background:linear-gradient(135deg,#0a1628,#112236);">
+  <div class="container">
+    <div class="cta-inner fade-in">
+      <h2 class="cta-title">Готові автоматизувати ІТ-процеси свого підприємства?</h2>
+      <p class="cta-subtitle">Наші спеціалісти допоможуть вибрати оптимальне рішення, що підходить саме вашому бізнесу.</p>
+      <div class="cta-buttons">
+        <a href="mailto:tsales@techexpert.ua?subject=Замовлення консультації" class="btn btn-primary btn-lg">
+          <i data-lucide="calendar" style="width:18px;height:18px;"></i>
+          Замовити консультацію
+        </a>
+        <a href="tel:+380445960068" class="btn btn-outline btn-lg">
+          <i data-lucide="phone" style="width:18px;height:18px;"></i>
+          Зателефонувати
+        </a>
+      </div>
+      <p class="cta-note">Консультація — безкоштовна. Відповідаємо протягом 1 робочого дня.</p>
+    </div>
+  </div>
+</div>
+
+<!-- ===== USE CASES ===== -->
+<section id="use-cases">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <div class="section-tag">Застосування</div>
+      <h2 class="section-title">GLPI — не лише для ІТ-служб</h2>
+      <p class="section-subtitle">Завдяки гнучкості GLPI, автоматизацію можна поширити і на інші підрозділи вашого підприємства.</p>
+    </div>
+    <div class="use-cases-grid">
+      <div class="use-case-card fade-in fade-in-delay-1">
+        <span class="use-case-emoji">🚚</span>
+        <h3>Логістичний відділ</h3>
+        <p>Заявки на транспорт, відстеження доставок та управління автопарком у єдиній системі.</p>
+      </div>
+      <div class="use-case-card fade-in fade-in-delay-2">
+        <span class="use-case-emoji">🏗️</span>
+        <h3>Інженерний відділ</h3>
+        <p>Заявки на обслуговування інженерних комунікацій: ОВІП, електрика, водопостачання.</p>
+      </div>
+      <div class="use-case-card fade-in fade-in-delay-3">
+        <span class="use-case-emoji">🏢</span>
+        <h3>АГС відділ</h3>
+        <p>Замовлення канцтоварів, комплектуючих та витратних матеріалів з контролем виконання.</p>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== EXPERTISE ===== -->
+<section id="expertise">
+  <div class="container">
+    <div class="expertise-grid">
+      <div class="expertise-text fade-in-left">
+        <div class="section-tag" style="background:rgba(255,255,255,0.1);color:#fff;">Про компанію</div>
+        <h2 class="section-title" style="color:#fff;">25 років унікальної експертизи TechExpert</h2>
+        <p>Компанія TechExpert — провідний інтегратор та провайдер комплексних ІТ-послуг із понад 25-річним досвідом роботи на ринку.</p>
+        <p>Ми маємо унікальну та багату компетенцію у впровадженні та доопрацюванні рішень на базі GLPI в організаціях різних галузей у Східній Європі.</p>
+        <ul class="expertise-list">
+          <li>Розробили власні плагіни та модулі, що вже використовуються на підприємствах</li>
+          <li>Впровадили ITSM-рішення для компаній різного масштабу</li>
+          <li>Адаптували систему до специфічних вимог бізнесу та галузевих стандартів</li>
+          <li>Забезпечили інтеграцію з десятками корпоративних систем</li>
+        </ul>
+        <blockquote class="expertise-quote">
+          "Шукаєте надійного партнера для впровадження GLPI? Звертайтесь до TechExpert — ми знаємо, як зробити це правильно."
+        </blockquote>
+      </div>
+      <div class="expertise-counters fade-in-right">
+        <div class="exp-counter">
+          <div class="exp-counter-value counter" data-target="25" data-suffix="+">0</div>
+          <div class="exp-counter-label">років на ринку ІТ</div>
+        </div>
+        <div class="exp-counter">
+          <div class="exp-counter-value counter" data-target="100" data-suffix="+">0</div>
+          <div class="exp-counter-label">успішних впроваджень</div>
+        </div>
+        <div class="exp-counter">
+          <div class="exp-counter-value counter" data-target="10" data-suffix="">0</div>
+          <div class="exp-counter-label">власних плагінів для GLPI</div>
+        </div>
+        <div class="exp-counter">
+          <div class="exp-counter-value" style="font-size:1.2rem;">№1</div>
+          <div class="exp-counter-label">Єдиний партнер з такою глибиною GLPI-експертизи у Східній Європі</div>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== IMPLEMENTATION STEPS ===== -->
+<section id="implementation">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <div class="section-tag">Процес</div>
+      <h2 class="section-title">Як відбувається впровадження?</h2>
+      <p class="section-subtitle">Ми супроводжуємо вас на кожному етапі — від аналізу потреб до підтримки після запуску.</p>
+    </div>
+    <div class="steps-timeline">
+      <div class="step-item">
+        <div class="step-content fade-in-left">
+          <h3>Аналіз потреб та аудит поточних процесів</h3>
+          <p>Вивчаємо ваші бізнес-процеси, визначаємо точки болю та формуємо технічне завдання для оптимального рішення.</p>
+        </div>
+        <div class="step-center"><div class="step-number">1</div></div>
+        <div class="step-empty"></div>
+      </div>
+      <div class="step-item">
+        <div class="step-empty"></div>
+        <div class="step-center"><div class="step-number">2</div></div>
+        <div class="step-content fade-in-right">
+          <h3>Проєктування рішення та налаштування GLPI</h3>
+          <p>Розробляємо архітектуру рішення, налаштовуємо систему, встановлюємо необхідні плагіни та інтеграції.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-content fade-in-left">
+          <h3>Розгортання та міграція даних</h3>
+          <p>Розгортаємо систему в хмарі або на потужностях замовника, мігруємо наявні дані зі старих систем.</p>
+        </div>
+        <div class="step-center"><div class="step-number">3</div></div>
+        <div class="step-empty"></div>
+      </div>
+      <div class="step-item">
+        <div class="step-empty"></div>
+        <div class="step-center"><div class="step-number">4</div></div>
+        <div class="step-content fade-in-right">
+          <h3>Навчання персоналу та тестування</h3>
+          <p>Проводимо навчання адміністраторів та користувачів, тестуємо всі процеси та сценарії роботи.</p>
+        </div>
+      </div>
+      <div class="step-item">
+        <div class="step-content fade-in-left">
+          <h3>Підтримка та розвиток після запуску</h3>
+          <p>Забезпечуємо технічну підтримку, регулярні оновлення системи та розвиток функціональності відповідно до зростання бізнесу.</p>
+        </div>
+        <div class="step-center"><div class="step-number">5</div></div>
+        <div class="step-empty"></div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== COMPARISON ===== -->
+<section id="comparison">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <div class="section-tag">Порівняння</div>
+      <h2 class="section-title">Без GLPI vs З GLPI</h2>
+      <p class="section-subtitle">Наочна різниця між хаотичним управлінням ІТ та автоматизованим підходом.</p>
+    </div>
+    <div class="comparison-table fade-in">
+      <div class="comp-col without-col">
+        <div class="comp-header without">❌ Без GLPI</div>
+        <div class="comp-item without"><span class="comp-item-icon">✗</span> Заявки через месенджери, email, усно — все губиться</div>
+        <div class="comp-item without"><span class="comp-item-icon">✗</span> Немає статистики: незрозуміло, хто що робить</div>
+        <div class="comp-item without"><span class="comp-item-icon">✗</span> SLA не контролюються, дедлайни порушуються</div>
+        <div class="comp-item without"><span class="comp-item-icon">✗</span> Облік обладнання в Excel — застаріло й ненадійно</div>
+        <div class="comp-item without"><span class="comp-item-icon">✗</span> Складно пріоритизувати: все "терміново"</div>
+        <div class="comp-item without"><span class="comp-item-icon">✗</span> Нові співробітники не мають доступу до рішень</div>
+      </div>
+      <div class="comp-col">
+        <div class="comp-divider-header">VS</div>
+        <div class="comp-divider-item"><div class="comp-vs">VS</div></div>
+        <div class="comp-divider-item"><div class="comp-vs">VS</div></div>
+        <div class="comp-divider-item"><div class="comp-vs">VS</div></div>
+        <div class="comp-divider-item"><div class="comp-vs">VS</div></div>
+        <div class="comp-divider-item"><div class="comp-vs">VS</div></div>
+        <div class="comp-divider-item"><div class="comp-vs">VS</div></div>
+      </div>
+      <div class="comp-col with-col">
+        <div class="comp-header with">✅ З GLPI</div>
+        <div class="comp-item with"><span class="comp-item-icon">✓</span> Єдина точка входу для всіх запитів з відстеженням статусу</div>
+        <div class="comp-item with"><span class="comp-item-icon">✓</span> Повна аналітика: KPI, навантаження, тренди</div>
+        <div class="comp-item with"><span class="comp-item-icon">✓</span> Автоматичний контроль SLA з ескалацією</div>
+        <div class="comp-item with"><span class="comp-item-icon">✓</span> CMDB із повним обліком апаратних і програмних активів</div>
+        <div class="comp-item with"><span class="comp-item-icon">✓</span> Чітка пріоритизація за матрицею терміновість/важливість</div>
+        <div class="comp-item with"><span class="comp-item-icon">✓</span> База знань із готовими рішеннями для самообслуговування</div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== FAQ ===== -->
+<section id="faq">
+  <div class="container">
+    <div class="section-header centered fade-in">
+      <div class="section-tag">FAQ</div>
+      <h2 class="section-title">Часті запитання</h2>
+      <p class="section-subtitle">Відповіді на найпоширеніші питання про GLPI та послуги TechExpert.</p>
+    </div>
+    <div class="faq-list fade-in">
+      <div class="faq-item open">
+        <div class="faq-question">
+          Що таке GLPI і чому воно краще за платні альтернативи?
+          <span class="faq-chevron"><i data-lucide="chevron-down" style="width:18px;height:18px;"></i></span>
+        </div>
+        <div class="faq-answer">
+          GLPI — відкрита ITSM-платформа з усіма необхідними функціями: Service Desk, CMDB, управління SLA, бюджетами та базою знань. На відміну від платних рішень (ServiceNow, Jira Service Management), GLPI не має ліцензійних обмежень за кількістю агентів або модулів. Ви платите лише за впровадження та підтримку, а не за "місця" в системі.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          Чи підходить GLPI для нашої галузі та розміру компанії?
+          <span class="faq-chevron"><i data-lucide="chevron-down" style="width:18px;height:18px;"></i></span>
+        </div>
+        <div class="faq-answer">
+          GLPI успішно використовується в компаніях від 50 до 10 000+ співробітників у різних галузях: банківська сфера, охорона здоров'я, виробництво, держсектор, ритейл та телеком. Гнучкість системи дозволяє адаптувати її під будь-які специфічні вимоги.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          Скільки часу займає впровадження?
+          <span class="faq-chevron"><i data-lucide="chevron-down" style="width:18px;height:18px;"></i></span>
+        </div>
+        <div class="faq-answer">
+          Базове впровадження займає від 2 до 8 тижнів залежно від масштабу компанії та складності процесів. Базова конфігурація із Service Desk та інвентаризацією може бути готова за 2 тижні. Повноцінне впровадження зі всіма інтеграціями та навчанням персоналу — 4–8 тижнів.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          Яка вартість рішення?
+          <span class="faq-chevron"><i data-lucide="chevron-down" style="width:18px;height:18px;"></i></span>
+        </div>
+        <div class="faq-answer">
+          Вартість залежить від обраних модулів, кількості плагінів та обсягу робіт з впровадження. GLPI як платформа — безкоштовна (open source). Ви оплачуєте послуги впровадження та налаштування, а також підписку на комерційні плагіни. Зв'яжіться з нами для отримання індивідуального розрахунку.
+        </div>
+      </div>
+      <div class="faq-item">
+        <div class="faq-question">
+          Чи можна кастомізувати систему під наші процеси?
+          <span class="faq-chevron"><i data-lucide="chevron-down" style="width:18px;height:18px;"></i></span>
+        </div>
+        <div class="faq-answer">
+          Так, GLPI надзвичайно гнучка в налаштуванні. Можна змінити категорії та типи заявок, налаштувати маршрутизацію, додати кастомні поля, налаштувати автоматичні правила та сповіщення. Власні плагіни TechExpert розширюють можливості кастомізації ще більше.
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+<!-- ===== CONTACT ===== -->
+<section id="contact">
+  <div class="container">
+    <div class="section-header section-dark centered fade-in">
+      <div class="section-tag">Контакти</div>
+      <h2 class="section-title">Зв'яжіться з нами — ми відповімо швидко!</h2>
+      <p class="section-subtitle">Залиште заявку або напишіть листа — наш спеціаліст зв'яжеться з вами протягом 1 робочого дня.</p>
+    </div>
+    <div class="contact-grid">
+      <div class="contact-form fade-in-left">
+        <form id="contact-form" onsubmit="submitForm(event)">
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Ваше ім'я *</label>
+              <input type="text" class="form-input" id="f-name" placeholder="Іван Петренко" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Компанія *</label>
+              <input type="text" class="form-input" id="f-company" placeholder="ТОВ Ваша Компанія" required>
+            </div>
+          </div>
+          <div class="form-row">
+            <div class="form-group">
+              <label class="form-label">Email *</label>
+              <input type="email" class="form-input" id="f-email" placeholder="you@company.ua" required>
+            </div>
+            <div class="form-group">
+              <label class="form-label">Телефон</label>
+              <input type="tel" class="form-input" id="f-phone" placeholder="+38 (044) 000-00-00">
+            </div>
+          </div>
+          <div class="form-group">
+            <label class="form-label">Повідомлення</label>
+            <textarea class="form-input" id="f-message" placeholder="Розкажіть про ваше завдання або запитайте про конкретний модуль..."></textarea>
+          </div>
+          <button type="submit" class="btn btn-primary btn-lg" style="width:100%;justify-content:center;">
+            <i data-lucide="send" style="width:18px;height:18px;"></i>
+            Надіслати запит
+          </button>
+          <p style="color:rgba(255,255,255,0.35);font-size:0.78rem;margin-top:12px;text-align:center;">Натискаючи кнопку, ви погоджуєтесь з умовами обробки персональних даних</p>
+        </form>
+      </div>
+      <div class="contact-info fade-in-right">
+        <div class="contact-info-title">Контактна інформація</div>
+        <div class="contact-item">
+          <div class="contact-item-icon"><i data-lucide="phone" style="width:18px;height:18px;"></i></div>
+          <div>
+            <div class="contact-item-label">Телефон</div>
+            <div class="contact-item-value">
+              <a href="tel:+380445960068">+38 (044) 596-00-68</a><br>
+              <a href="tel:+380443907336">+38 (044) 390-73-36</a>
+            </div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon"><i data-lucide="mail" style="width:18px;height:18px;"></i></div>
+          <div>
+            <div class="contact-item-label">Email</div>
+            <div class="contact-item-value">
+              <a href="mailto:tsales@techexpert.ua">tsales@techexpert.ua</a>
+            </div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon"><i data-lucide="map-pin" style="width:18px;height:18px;"></i></div>
+          <div>
+            <div class="contact-item-label">Адреса</div>
+            <div class="contact-item-value">вул. Дегтярівська, 48, 4 поверх,<br>офіс 411, Київ, Україна</div>
+          </div>
+        </div>
+        <div class="contact-item">
+          <div class="contact-item-icon"><i data-lucide="globe" style="width:18px;height:18px;"></i></div>
+          <div>
+            <div class="contact-item-label">Сайт</div>
+            <div class="contact-item-value">
+              <a href="https://techexpert.ua" target="_blank" rel="noopener noreferrer">techexpert.ua</a>
+            </div>
+          </div>
+        </div>
+        <div style="margin-top:32px;padding:24px;background:rgba(0,119,204,0.12);border:1px solid rgba(0,119,204,0.25);border-radius:var(--radius);">
+          <div style="color:#60B4FF;font-weight:700;font-size:0.95rem;margin-bottom:10px;">⏱ Час відповіді</div>
+          <p style="color:rgba(255,255,255,0.7);font-size:0.88rem;line-height:1.6;">Ми відповідаємо протягом <strong style="color:#fff;">1 робочого дня</strong>. Для термінових питань телефонуйте напряму.</p>
+        </div>
+      </div>
+    </div>
+  </div>
+</section>
+
+</main>
+
+<!-- ===== FOOTER ===== -->
+<footer>
+  <div class="container">
+    <div class="footer-inner">
+      <div class="footer-logo logo-svg-wrap">
+        <span class="logo-svg-footer"><svg version="1.1" id="te_logo_white" xmlns="http://www.w3.org/2000/svg" xmlns:xlink="http://www.w3.org/1999/xlink" x="0px" y="0px" viewBox="0 0 518.67 178.67" xml:space="preserve"> <style type="text/css"> .st0{fill:#FFFFFF;} .st1{fill-rule:evenodd;clip-rule:evenodd;fill:#004D84;} .st2{fill-rule:evenodd;clip-rule:evenodd;} .st3{display:none;} .st4{display:inline;} .st5{fill:#FFFFFF;} .st6{display:inline;fill-rule:evenodd;clip-rule:evenodd;fill:#CDCCCD;} .st7{display:inline;fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;} .st8{fill-rule:evenodd;clip-rule:evenodd;fill:#FFFFFF;} </style> <g> <g> <path class="st0" d="M499.44,49.71c1.85,0.01,3.62,0.47,5.31,1.4c1.7,0.93,3.03,2.26,3.99,3.98c0.96,1.73,1.45,3.54,1.44,5.42 c-0.01,1.88-0.49,3.66-1.45,5.36c-0.96,1.7-2.29,3.02-3.99,3.97c-1.7,0.95-3.5,1.42-5.37,1.41c-1.88-0.01-3.66-0.49-5.36-1.44 c-1.7-0.96-3.02-2.29-3.97-3.99s-1.42-3.49-1.41-5.37c0.01-1.88,0.5-3.69,1.47-5.41c0.98-1.72,2.31-3.04,4.02-3.96 C495.81,50.16,497.59,49.7,499.44,49.71z M499.45,51.81c-1.48,0-2.91,0.36-4.27,1.1s-2.44,1.8-3.22,3.18 c-0.79,1.39-1.18,2.84-1.19,4.36c0,1.51,0.37,2.95,1.13,4.32c0.76,1.37,1.83,2.44,3.19,3.22c1.37,0.77,2.8,1.16,4.3,1.17 c1.51,0.01,2.95-0.38,4.32-1.14c1.37-0.77,2.44-1.83,3.21-3.2c0.77-1.37,1.16-2.8,1.17-4.31c0-1.52-0.38-2.97-1.16-4.37 c-0.78-1.39-1.85-2.46-3.21-3.2C502.35,52.19,500.93,51.82,499.45,51.81z M494.51,66.23l0.04-11.44l2.33,0.01 c2.18,0.01,3.4,0.02,3.67,0.04c0.77,0.07,1.37,0.22,1.8,0.46c0.43,0.24,0.78,0.61,1.07,1.1c0.29,0.49,0.43,1.04,0.43,1.64 c0,0.83-0.28,1.53-0.82,2.12c-0.55,0.59-1.31,0.95-2.29,1.08c0.35,0.13,0.61,0.28,0.8,0.43c0.19,0.15,0.45,0.45,0.77,0.88 c0.08,0.11,0.37,0.58,0.84,1.39l1.36,2.31l-2.86-0.01l-0.96-1.86c-0.65-1.25-1.19-2.04-1.61-2.36c-0.42-0.32-0.95-0.49-1.6-0.49 l-0.61,0l-0.01,4.7L494.51,66.23z M496.86,59.73l0.95,0c1.35,0,2.18-0.05,2.51-0.15c0.32-0.1,0.58-0.28,0.77-0.54 c0.19-0.26,0.28-0.55,0.29-0.88c0-0.32-0.09-0.6-0.27-0.85c-0.18-0.25-0.44-0.43-0.78-0.54c-0.34-0.11-1.17-0.16-2.5-0.17l-0.95,0 L496.86,59.73z"/> </g> <polygon class="st1" points="75.72,132.98 75.7,46.61 50.31,9.45 37.95,9.42 38.02,55.48 51.73,75.4 51.73,35.29 61.97,50.31 61.97,106.97 23.19,50.03 8.16,50.02 8.15,132.72 33.59,169.9 45.89,169.9 45.9,123.28 32.16,103.35 32.16,144.06 21.9,129.09 21.9,72.2 63.41,132.96 75.72,132.98 75.72,132.98 "/> <path class="st2" d="M455.8,78.59h-5.31l0.08-9.69h5.2V55.42h13.38V68.9h6.51l-0.07,9.69h-6.39l-0.02,24.87 c-0.02,0.49,0.01,0.91,0.08,1.25c0.29,1.35,1.24,2.01,2.87,2.01c0.65-0.1,1.79-0.16,3.42-0.16l0,9.44c-3.43,0.5-6.3,0.76-8.6,0.76 c-6.13,0-9.73-2.53-10.81-7.58c-0.22-1.03-0.34-2.12-0.35-3.3V78.59L455.8,78.59z"/> <path class="st2" d="M423.13,68.9h12.48l0,7.15h0.15c1.73-5.66,5.17-8.49,10.34-8.49l0.01,15.16c-1.17-0.22-2.5-0.32-4.01-0.32 c-1.23,0-2.21,0.07-2.91,0.24c-1.81,0.45-2.71,1.91-2.69,4.38l0.03,29.06h-13.39L423.13,68.9L423.13,68.9z"/> <path class="st2" d="M416.74,94.69h-22.66l-0.02,8.26c0.01,0.56,0.06,1.07,0.15,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.29c0.7,11.72-5.13,17.66-17.5,17.85 c-0.16,0-0.34,0-0.51,0c-4.33,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.36-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,7.99,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L416.74,94.69L416.74,94.69z M394.06,85.85h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.15,0-4.72,2.11-4.72,6.32L394.06,85.85L394.06,85.85z"/> <path class="st2" d="M339.59,68.9h12.48l0.03,5.73h0.2c2.47-4.66,6.09-7.02,10.87-7.07c0.05,0,0.11,0,0.17,0 c5.73,0,9.33,3.48,10.81,10.45c0.38,1.8,0.56,3.71,0.54,5.71l-0.06,16.36c-0.05,11.39-3.95,17.23-11.71,17.52 c-0.04,0-0.13,0-0.24,0c-1.35,0-2.79-0.42-4.33-1.28c-2.02-1.07-3.75-2.64-5.19-4.71h-0.2L353,132h-13.38L339.59,68.9L339.59,68.9z M361.22,98.47l0.02-12.21c-0.01-1.91-0.12-3.34-0.32-4.3c-0.49-2.3-1.66-3.45-3.53-3.45c-2.92,0-4.38,2.78-4.38,8.34l0.02,11.11 c0.01,1.64,0.15,3.1,0.42,4.38c0.61,2.88,1.84,4.31,3.68,4.31c1.85,0,3.08-0.98,3.67-2.95 C361.11,102.68,361.24,100.94,361.22,98.47L361.22,98.47z"/> <polygon class="st2" points="320.87,68.9 334.27,68.9 323.77,92.49 334.61,116.08 321.2,116.08 316.88,102.53 316.73,102.53 312.45,116.08 298.7,116.08 309.78,92.49 299.21,68.9 312.52,68.9 316.51,82.13 316.69,82.13 320.87,68.9 "/> <polygon class="st2" points="293.22,116.08 258.24,116.08 258.22,52.89 292.28,52.89 292.24,65.52 273.13,65.52 273.07,77.17 291.62,77.17 291.6,89.79 273.07,89.79 273.08,103.45 293.23,103.45 293.22,116.08 "/> <path class="st2" d="M229.24,52.89l-0.05,19.7h0.15c2.67-3.36,6.05-5.04,10.15-5.04c2.7,0,4.98,0.73,6.85,2.17 c1.86,1.53,3.04,3.53,3.56,6c0.16,0.77,0.26,1.62,0.29,2.53l0.05,37.83h-13.42l0.06-33.53c0.01-0.67-0.03-1.24-0.12-1.69 c-0.33-1.57-1.57-2.36-3.7-2.36c-2.58,0-3.89,1.65-3.9,4.97l0.01,32.6h-13.41l-0.02-63.18H229.24L229.24,52.89z"/> <path class="st2" d="M207.75,86.42h-12.63l-0.09-0.84c-0.14-1.23,0.04-3.07-0.49-5.39c-0.46-2.04-1.9-2.95-3.66-2.95 c-2.64,0-4.02,1.91-4.01,5.71l0.03,19.46c0,0.8,0.08,1.5,0.21,2.12c0.48,2.25,1.87,3.37,4.17,3.37c2.13,0,3.44-1.38,3.91-4.13 c0.1-0.68,0.15-2.95,0.15-6.82h12.99c-0.01,5.05-0.37,8.79-1.09,11.2c-1.65,5.43-5.86,8.5-12.62,9.17 c-1.76,0.18-3.26,0.27-4.49,0.27c-9.33,0-14.73-3.48-16.21-10.45c-0.27-1.29-0.37-2.7-0.38-4.21l-0.06-19.22 c-0.04-10.77,5.52-16.16,16.35-16.16c0.06,0,0.11,0,0.17,0c9.95,0.05,15.71,3.76,17.27,11.1 C207.74,80.86,207.89,83.45,207.75,86.42L207.75,86.42z"/> <path class="st2" d="M166.57,94.69h-22.66l-0.02,8.26c0.01,0.56,0.06,1.07,0.16,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.3c0.7,11.72-5.13,17.66-17.5,17.85 c-0.15,0-0.34,0-0.51,0c-4.32,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.35-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,8,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L166.57,94.69L166.57,94.69z M143.88,85.85h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.14,0-4.72,2.11-4.72,6.32L143.88,85.85L143.88,85.85z"/> <polygon class="st2" points="89.11,65.52 89.14,52.89 127.68,52.89 127.64,65.52 115.7,65.52 115.74,116.08 100.81,116.08 100.86,65.52 89.11,65.52 "/> <g> <path class="st2" d="M217.01,149.64c-0.11,0.8-0.6,2.02-2.27,2.02c-1.73,0-2.65-1.47-2.65-3.5c0-3.61,2.01-3.72,2.58-3.72 c0.59,0,2.02,0.08,2.25,1.88h2.5c-0.08-1.59-1.05-3.98-4.88-3.98c-1.03,0-5.2,0.21-5.2,5.91c0,4.24,2.53,5.51,5.29,5.51 c3.83,0,4.74-2.5,4.91-4.13H217.01L217.01,149.64z"/> <path class="st2" d="M257.09,154.14c3.72,0,5.46-2.44,5.46-5.71c0-3.27-1.74-5.71-5.46-5.71c-4.26,0-5.46,3.19-5.46,5.71 C251.63,150.94,252.83,154.14,257.09,154.14L257.09,154.14z M257.09,152.04c-1.4,0-2.7-0.79-2.7-3.61c0-2.86,1.3-3.61,2.7-3.61 c2.61,0,2.72,2.64,2.72,3.61C259.8,149.34,259.68,152.04,257.09,152.04L257.09,152.04z"/> <polygon class="st2" points="299.19,153.77 300.92,153.77 303.62,146.05 303.67,146.05 303.67,153.77 306.21,153.77 306.21,142.96 302.63,142.96 300.06,150.38 297.48,142.96 293.9,142.96 293.9,153.77 296.45,153.77 296.45,146.05 296.49,146.05 299.19,153.77 "/> <path class="st2" d="M337.91,143.04v10.8h2.54v-3.72h2.42c1.31,0,4.13-0.22,4.13-3.6c0-2.67-1.88-3.49-4.07-3.49H337.91 L337.91,143.04z M340.46,145.14h1.99c0.57,0,1.82-0.06,1.82,1.4c0,1.05-0.62,1.48-1.82,1.48h-1.99V145.14L340.46,145.14z"/> <path class="st2" d="M380.45,142.8l-4.04,10.8h2.69l0.68-2.02h3.92l0.7,2.02h2.7l-4.06-10.8H380.45L380.45,142.8z M380.32,149.75 l1.42-4.12l1.39,4.12H380.32L380.32,149.75z"/> <polygon class="st2" points="421.5,146.93 425.75,153.69 428.35,153.69 428.35,142.89 425.8,142.89 425.8,149.6 425.75,149.6 421.5,142.89 418.92,142.89 418.92,153.69 421.46,153.69 421.46,146.93 421.5,146.93 "/> <polygon class="st2" points="464.29,147.77 462.01,143.09 459.1,143.09 463.01,149.82 463.01,153.89 465.57,153.89 465.57,149.82 469.35,143.09 466.58,143.09 464.29,147.77 "/> <path d="M143.5,145.13h-3.12v8.69h-2.44v-8.69h-3.15v-2.09h8.72V145.13z"/> <path d="M102.43,153.66h-2.45v-10.8h2.45V153.66z"/> </g> </g> <g class="st3"> <g class="st4"> <path class="st5" d="M422.77,706.67c1.85,0.01,3.62,0.47,5.31,1.4c1.7,0.93,3.03,2.26,3.99,3.98c0.96,1.73,1.45,3.54,1.44,5.42 c-0.01,1.88-0.49,3.66-1.45,5.36c-0.96,1.7-2.29,3.02-3.99,3.97c-1.7,0.95-3.5,1.42-5.37,1.41c-1.88-0.01-3.66-0.49-5.36-1.44 c-1.7-0.96-3.02-2.29-3.97-3.99c-0.95-1.7-1.42-3.49-1.41-5.37c0.01-1.88,0.5-3.69,1.47-5.41c0.98-1.72,2.31-3.04,4.02-3.96 C419.15,707.13,420.92,706.67,422.77,706.67z M422.78,708.78c-1.48,0-2.91,0.36-4.27,1.1c-1.36,0.74-2.44,1.8-3.22,3.18 c-0.79,1.39-1.18,2.84-1.19,4.36c0,1.51,0.37,2.95,1.13,4.32c0.76,1.37,1.83,2.44,3.19,3.22c1.37,0.77,2.8,1.16,4.3,1.17 c1.51,0.01,2.95-0.38,4.32-1.14c1.37-0.77,2.44-1.83,3.21-3.2c0.77-1.37,1.16-2.8,1.17-4.31c0-1.52-0.38-2.97-1.16-4.37 c-0.78-1.39-1.85-2.46-3.21-3.2C425.69,709.16,424.26,708.79,422.78,708.78z M417.85,723.19l0.04-11.44l2.33,0.01 c2.18,0.01,3.4,0.02,3.67,0.04c0.77,0.07,1.37,0.22,1.8,0.46c0.43,0.24,0.78,0.61,1.07,1.1c0.29,0.49,0.43,1.04,0.43,1.64 c0,0.83-0.28,1.53-0.82,2.12c-0.54,0.59-1.31,0.95-2.29,1.08c0.35,0.13,0.61,0.28,0.8,0.43c0.19,0.15,0.45,0.45,0.77,0.88 c0.08,0.11,0.37,0.58,0.84,1.39l1.36,2.31l-2.86-0.01l-0.96-1.86c-0.65-1.25-1.19-2.04-1.61-2.36c-0.42-0.32-0.96-0.49-1.6-0.49 l-0.61,0l-0.01,4.7L417.85,723.19z M420.19,716.7l0.95,0c1.35,0,2.18-0.04,2.51-0.15c0.32-0.1,0.58-0.28,0.77-0.54 c0.19-0.26,0.28-0.55,0.29-0.88c0-0.32-0.09-0.6-0.27-0.85c-0.18-0.25-0.44-0.43-0.78-0.54c-0.34-0.11-1.17-0.16-2.5-0.17l-0.95,0 L420.19,716.7z"/> </g> <polygon class="st6" points="-0.95,789.94 -0.97,703.58 -26.36,666.42 -38.72,666.38 -38.65,712.45 -24.93,732.37 -24.93,692.26 -14.69,707.27 -14.69,763.94 -53.48,707 -68.51,706.99 -68.52,789.69 -43.08,826.87 -30.78,826.87 -30.77,780.25 -44.5,760.32 -44.5,801.03 -54.77,786.05 -54.77,729.16 -13.25,789.93 -0.95,789.94 -0.95,789.94 "/> <path class="st7" d="M379.13,735.56h-5.31l0.08-9.69h5.2v-13.48h13.38v13.48H399l-0.07,9.69h-6.39l-0.02,24.87 c-0.02,0.49,0.01,0.91,0.08,1.25c0.29,1.35,1.24,2.01,2.87,2.01c0.65-0.1,1.79-0.16,3.42-0.16l0,9.44c-3.43,0.5-6.3,0.76-8.6,0.76 c-6.13,0-9.73-2.53-10.81-7.58c-0.22-1.03-0.34-2.12-0.35-3.3V735.56L379.13,735.56z"/> <path class="st7" d="M346.46,725.87h12.48l0,7.15h0.15c1.73-5.66,5.17-8.49,10.34-8.49l0.01,15.16c-1.17-0.22-2.5-0.32-4.01-0.32 c-1.23,0-2.21,0.07-2.91,0.24c-1.81,0.45-2.71,1.91-2.69,4.38l0.03,29.06h-13.39L346.46,725.87L346.46,725.87z"/> <path class="st7" d="M340.08,751.66h-22.66l-0.02,8.26c0.01,0.56,0.06,1.07,0.15,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.29c0.7,11.72-5.13,17.66-17.5,17.85 c-0.16,0-0.34,0-0.51,0c-4.33,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.36-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,7.99,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L340.08,751.66L340.08,751.66z M317.39,742.82h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.15,0-4.72,2.11-4.72,6.32L317.39,742.82L317.39,742.82z"/> <path class="st7" d="M262.93,725.87h12.48l0.03,5.73h0.2c2.47-4.66,6.09-7.02,10.87-7.07c0.05,0,0.11,0,0.17,0 c5.73,0,9.33,3.48,10.81,10.45c0.38,1.8,0.56,3.71,0.54,5.71l-0.06,16.36c-0.05,11.39-3.95,17.23-11.71,17.52 c-0.04,0-0.13,0-0.24,0c-1.35,0-2.79-0.42-4.33-1.28c-2.02-1.07-3.75-2.64-5.19-4.71h-0.2l0.04,20.39h-13.38L262.93,725.87 L262.93,725.87z M284.56,755.44l0.02-12.21c-0.01-1.91-0.12-3.34-0.32-4.3c-0.49-2.3-1.66-3.45-3.53-3.45 c-2.92,0-4.38,2.78-4.38,8.34l0.02,11.11c0.01,1.64,0.15,3.1,0.42,4.38c0.61,2.88,1.84,4.31,3.68,4.31c1.85,0,3.08-0.98,3.67-2.95 C284.44,759.65,284.58,757.91,284.56,755.44L284.56,755.44z"/> <polygon class="st7" points="244.2,725.87 257.6,725.87 247.1,749.46 257.94,773.05 244.53,773.05 240.22,759.5 240.06,759.5 235.78,773.05 222.04,773.05 233.11,749.46 222.54,725.87 235.85,725.87 239.84,739.09 240.02,739.09 244.2,725.87 "/> <polygon class="st7" points="216.55,773.05 181.58,773.05 181.56,709.86 215.61,709.86 215.58,722.49 196.47,722.49 196.4,734.14 214.95,734.14 214.94,746.76 196.41,746.76 196.42,760.42 216.56,760.42 216.55,773.05 "/> <path class="st7" d="M152.57,709.86l-0.05,19.7h0.15c2.67-3.36,6.05-5.04,10.15-5.04c2.7,0,4.98,0.73,6.85,2.17 c1.86,1.53,3.04,3.53,3.56,6c0.16,0.77,0.26,1.62,0.29,2.53l0.05,37.83h-13.42l0.06-33.53c0.01-0.67-0.03-1.24-0.12-1.69 c-0.33-1.57-1.57-2.36-3.7-2.36c-2.58,0-3.89,1.65-3.9,4.97l0.01,32.6h-13.41l-0.02-63.18H152.57L152.57,709.86z"/> <path class="st7" d="M131.09,743.39h-12.63l-0.09-0.84c-0.14-1.23,0.04-3.07-0.49-5.39c-0.46-2.04-1.9-2.95-3.66-2.95 c-2.64,0-4.02,1.91-4.01,5.71l0.03,19.46c0,0.8,0.08,1.5,0.21,2.12c0.48,2.25,1.87,3.37,4.17,3.37c2.13,0,3.44-1.38,3.91-4.13 c0.1-0.68,0.15-2.95,0.15-6.82h12.99c-0.01,5.05-0.37,8.79-1.09,11.2c-1.65,5.43-5.86,8.5-12.62,9.17 c-1.76,0.18-3.26,0.27-4.49,0.27c-9.32,0-14.72-3.48-16.21-10.45c-0.27-1.29-0.37-2.7-0.38-4.21l-0.06-19.22 c-0.04-10.77,5.52-16.16,16.35-16.16c0.06,0,0.11,0,0.17,0c9.95,0.05,15.71,3.76,17.27,11.1 C131.07,737.83,131.23,740.41,131.09,743.39L131.09,743.39z"/> <path class="st7" d="M89.91,751.66H67.24l-0.02,8.26c0.01,0.56,0.06,1.07,0.16,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.3c0.7,11.72-5.13,17.66-17.5,17.85 c-0.15,0-0.34,0-0.51,0c-4.32,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.35-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,8,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L89.91,751.66L89.91,751.66z M67.22,742.82h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.14,0-4.72,2.11-4.72,6.32L67.22,742.82L67.22,742.82z"/> <polygon class="st7" points="12.44,722.49 12.48,709.86 51.01,709.86 50.98,722.49 39.03,722.49 39.07,773.05 24.14,773.05 24.19,722.49 12.44,722.49 "/> <g class="st4"> <path class="st8" d="M140.34,806.61c-0.11,0.8-0.6,2.02-2.27,2.02c-1.73,0-2.65-1.47-2.65-3.5c0-3.61,2.01-3.72,2.58-3.72 c0.59,0,2.02,0.08,2.25,1.88h2.5c-0.08-1.59-1.05-3.98-4.88-3.98c-1.03,0-5.2,0.21-5.2,5.91c0,4.24,2.53,5.51,5.29,5.51 c3.83,0,4.74-2.5,4.91-4.13H140.34L140.34,806.61z"/> <path class="st8" d="M180.42,811.11c3.72,0,5.46-2.44,5.46-5.71s-1.74-5.71-5.46-5.71c-4.26,0-5.46,3.19-5.46,5.71 C174.96,807.91,176.16,811.11,180.42,811.11L180.42,811.11z M180.42,809.01c-1.4,0-2.7-0.79-2.7-3.61c0-2.86,1.3-3.61,2.7-3.61 c2.61,0,2.72,2.64,2.72,3.61C183.14,806.31,183.01,809.01,180.42,809.01L180.42,809.01z"/> <polygon class="st8" points="222.53,810.73 224.26,810.73 226.96,803.01 227,803.01 227,810.73 229.55,810.73 229.55,799.93 225.97,799.93 223.39,807.35 220.81,799.93 217.23,799.93 217.23,810.73 219.78,810.73 219.78,803.01 219.83,803.01 222.53,810.73 "/> <path class="st8" d="M261.25,800v10.8h2.54v-3.72h2.42c1.31,0,4.13-0.22,4.13-3.6c0-2.67-1.88-3.49-4.07-3.49H261.25L261.25,800z M263.79,802.1h1.99c0.57,0,1.82-0.06,1.82,1.4c0,1.05-0.62,1.48-1.82,1.48h-1.99V802.1L263.79,802.1z"/> <path class="st8" d="M303.78,799.77l-4.04,10.8h2.69l0.68-2.02h3.92l0.7,2.02h2.7l-4.06-10.8H303.78L303.78,799.77z M303.66,806.72l1.42-4.12l1.39,4.12H303.66L303.66,806.72z"/> <polygon class="st8" points="344.83,803.9 349.09,810.66 351.68,810.66 351.68,799.85 349.13,799.85 349.13,806.57 349.09,806.57 344.83,799.85 342.25,799.85 342.25,810.66 344.8,810.66 344.8,803.9 344.83,803.9 "/> <polygon class="st8" points="387.62,804.73 385.34,800.06 382.44,800.06 386.34,806.79 386.34,810.86 388.91,810.86 388.91,806.79 392.69,800.06 389.91,800.06 387.62,804.73 "/> <path class="st5" d="M66.84,802.1h-3.12v8.69h-2.44v-8.69h-3.15v-2.09h8.72V802.1z"/> <path class="st5" d="M25.76,810.63h-2.45v-10.8h2.45V810.63z"/> </g> </g> <g class="st3"> <g class="st4"> <path class="st5" d="M422.77,394.71c1.85,0.01,3.62,0.47,5.31,1.4c1.7,0.93,3.03,2.26,3.99,3.98c0.96,1.73,1.45,3.54,1.44,5.42 c-0.01,1.88-0.49,3.66-1.45,5.36c-0.96,1.7-2.29,3.02-3.99,3.97c-1.71,0.95-3.5,1.42-5.37,1.41c-1.88-0.01-3.66-0.49-5.36-1.44 c-1.7-0.96-3.02-2.29-3.97-3.99c-0.95-1.7-1.42-3.49-1.41-5.37c0.01-1.88,0.5-3.69,1.47-5.41c0.98-1.72,2.31-3.04,4.02-3.96 C419.14,395.16,420.92,394.7,422.77,394.71z M422.78,396.81c-1.48,0-2.91,0.36-4.27,1.1c-1.36,0.74-2.44,1.8-3.22,3.18 c-0.79,1.39-1.18,2.84-1.19,4.36c0,1.51,0.37,2.95,1.13,4.32c0.76,1.37,1.83,2.44,3.19,3.22c1.37,0.77,2.8,1.16,4.3,1.17 c1.51,0.01,2.95-0.38,4.32-1.14c1.37-0.77,2.44-1.83,3.21-3.2c0.77-1.37,1.16-2.8,1.17-4.31c0-1.52-0.38-2.97-1.16-4.37 c-0.78-1.39-1.85-2.46-3.21-3.2C425.68,397.2,424.26,396.82,422.78,396.81z M417.84,411.23l0.04-11.44l2.33,0.01 c2.18,0.01,3.4,0.02,3.67,0.04c0.77,0.07,1.37,0.22,1.8,0.46c0.43,0.24,0.78,0.61,1.07,1.1c0.29,0.49,0.43,1.04,0.43,1.64 c0,0.83-0.28,1.53-0.82,2.12c-0.54,0.59-1.31,0.95-2.29,1.08c0.35,0.13,0.61,0.28,0.8,0.43c0.19,0.15,0.45,0.45,0.77,0.88 c0.08,0.11,0.37,0.58,0.84,1.39l1.36,2.31l-2.86-0.01l-0.96-1.86c-0.65-1.25-1.19-2.04-1.61-2.36c-0.42-0.32-0.96-0.49-1.6-0.49 l-0.61,0l-0.01,4.7L417.84,411.23z M420.19,404.73l0.95,0c1.35,0,2.18-0.04,2.51-0.15c0.32-0.1,0.58-0.28,0.77-0.54 c0.19-0.26,0.28-0.55,0.29-0.88c0-0.32-0.09-0.6-0.27-0.85c-0.18-0.25-0.44-0.43-0.78-0.54c-0.34-0.11-1.17-0.16-2.5-0.17l-0.95,0 L420.19,404.73z"/> </g> <polygon class="st7" points="-0.95,477.98 -0.97,391.61 -26.36,354.45 -38.72,354.42 -38.65,400.48 -24.93,420.4 -24.93,380.29 -14.69,395.31 -14.69,451.97 -53.48,395.04 -68.51,395.02 -68.52,477.72 -43.08,514.9 -30.78,514.9 -30.77,468.28 -44.5,448.35 -44.5,489.06 -54.77,474.09 -54.77,417.2 -13.25,477.96 -0.95,477.98 -0.95,477.98 "/> <path class="st7" d="M379.13,423.59h-5.31l0.08-9.69h5.2v-13.48h13.38v13.48H399l-0.07,9.69h-6.39l-0.02,24.87 c-0.02,0.49,0.01,0.91,0.08,1.25c0.29,1.35,1.24,2.01,2.87,2.01c0.65-0.1,1.79-0.16,3.42-0.16l0,9.44c-3.43,0.5-6.3,0.76-8.6,0.76 c-6.13,0-9.73-2.53-10.81-7.58c-0.22-1.03-0.34-2.12-0.35-3.3V423.59L379.13,423.59z"/> <path class="st7" d="M346.46,413.9h12.48l0,7.15h0.15c1.73-5.66,5.17-8.49,10.34-8.49l0.01,15.16c-1.17-0.22-2.5-0.32-4.01-0.32 c-1.23,0-2.21,0.07-2.91,0.24c-1.81,0.45-2.71,1.91-2.69,4.38l0.03,29.06h-13.39L346.46,413.9L346.46,413.9z"/> <path class="st7" d="M340.07,439.69h-22.66l-0.02,8.26c0.01,0.56,0.06,1.07,0.15,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.29c0.7,11.72-5.13,17.66-17.5,17.85 c-0.16,0-0.34,0-0.51,0c-4.33,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.36-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,7.99,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L340.07,439.69L340.07,439.69z M317.39,430.85h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.15,0-4.72,2.11-4.72,6.32L317.39,430.85L317.39,430.85z"/> <path class="st7" d="M262.92,413.9h12.48l0.03,5.73h0.2c2.47-4.66,6.09-7.02,10.87-7.07c0.05,0,0.11,0,0.17,0 c5.73,0,9.33,3.48,10.81,10.45c0.38,1.8,0.56,3.7,0.54,5.71l-0.06,16.36c-0.05,11.39-3.95,17.23-11.71,17.52c-0.04,0-0.13,0-0.24,0 c-1.35,0-2.79-0.42-4.33-1.28c-2.02-1.07-3.75-2.64-5.19-4.71h-0.2l0.04,20.39h-13.38L262.92,413.9L262.92,413.9z M284.55,443.47 l0.02-12.21c-0.01-1.91-0.12-3.34-0.32-4.3c-0.49-2.3-1.66-3.45-3.53-3.45c-2.92,0-4.38,2.78-4.38,8.34l0.02,11.11 c0.01,1.64,0.15,3.1,0.42,4.38c0.61,2.88,1.84,4.31,3.68,4.31c1.85,0,3.08-0.98,3.67-2.95 C284.44,447.68,284.58,445.94,284.55,443.47L284.55,443.47z"/> <polygon class="st7" points="244.2,413.9 257.6,413.9 247.1,437.49 257.94,461.08 244.53,461.08 240.21,447.53 240.06,447.53 235.78,461.08 222.03,461.08 233.11,437.49 222.54,413.9 235.85,413.9 239.84,427.13 240.02,427.13 244.2,413.9 "/> <polygon class="st7" points="216.55,461.08 181.58,461.08 181.55,397.89 215.61,397.89 215.57,410.52 196.46,410.52 196.4,422.17 214.95,422.17 214.93,434.79 196.4,434.79 196.41,448.45 216.56,448.45 216.55,461.08 "/> <path class="st7" d="M152.57,397.89l-0.05,19.7h0.16c2.67-3.36,6.05-5.04,10.15-5.04c2.7,0,4.98,0.73,6.85,2.17 c1.86,1.53,3.04,3.53,3.56,6c0.16,0.77,0.26,1.62,0.29,2.53l0.05,37.83h-13.42l0.06-33.53c0.01-0.67-0.03-1.24-0.12-1.69 c-0.33-1.57-1.57-2.36-3.7-2.36c-2.58,0-3.89,1.65-3.9,4.97l0.01,32.6h-13.41l-0.02-63.18H152.57L152.57,397.89z"/> <path class="st7" d="M131.09,431.42h-12.64l-0.09-0.84c-0.14-1.23,0.04-3.07-0.49-5.39c-0.46-2.04-1.9-2.95-3.66-2.95 c-2.64,0-4.01,1.91-4.01,5.71l0.03,19.46c0,0.8,0.08,1.5,0.21,2.12c0.48,2.25,1.87,3.37,4.17,3.37c2.13,0,3.44-1.38,3.91-4.13 c0.1-0.68,0.15-2.95,0.15-6.82h12.99c-0.01,5.05-0.37,8.79-1.09,11.2c-1.65,5.43-5.86,8.5-12.62,9.17 c-1.76,0.18-3.26,0.27-4.49,0.27c-9.32,0-14.72-3.48-16.21-10.45c-0.27-1.29-0.37-2.7-0.38-4.21l-0.06-19.22 c-0.04-10.77,5.52-16.16,16.35-16.16c0.06,0,0.11,0,0.17,0c9.95,0.05,15.71,3.76,17.27,11.1 C131.07,425.86,131.23,428.45,131.09,431.42L131.09,431.42z"/> <path class="st7" d="M89.91,439.69H67.24l-0.02,8.26c0.01,0.56,0.06,1.07,0.16,1.52c0.46,2.18,1.8,3.33,4.03,3.45 c0.1,0,0.21,0,0.32,0c1.97,0,3.22-0.84,3.76-2.53c0.17-0.51,0.36-2.39,0.57-5.64h13.3c0.7,11.72-5.13,17.66-17.5,17.85 c-0.15,0-0.34,0-0.51,0c-4.32,0-7.91-0.81-10.78-2.44c-3.45-1.91-5.58-4.77-6.39-8.61c-0.24-1.12-0.35-2.33-0.33-3.61l0.04-19.22 c0.02-10.66,6.01-16.05,17.95-16.16c0.17,0,0.32,0,0.49,0c4.38,0,8,0.76,10.84,2.26c3.48,1.8,5.61,4.54,6.39,8.19 c0.21,1.01,0.33,2.08,0.33,3.2L89.91,439.69L89.91,439.69z M67.22,430.85h9.27l0.02-4.65c-0.01-0.34-0.06-0.67-0.13-1.01 c-0.54-2.53-2.01-3.79-4.43-3.79c-3.14,0-4.72,2.11-4.72,6.32L67.22,430.85L67.22,430.85z"/> <polygon class="st7" points="12.44,410.52 12.48,397.89 51.01,397.89 50.98,410.52 39.03,410.52 39.07,461.08 24.14,461.08 24.19,410.52 12.44,410.52 "/> <g class="st4"> <path class="st8" d="M140.34,494.64c-0.11,0.8-0.6,2.02-2.27,2.02c-1.73,0-2.65-1.47-2.65-3.5c0-3.61,2.01-3.72,2.58-3.72 c0.59,0,2.02,0.08,2.25,1.88h2.5c-0.08-1.59-1.05-3.98-4.88-3.98c-1.03,0-5.2,0.21-5.2,5.91c0,4.24,2.53,5.51,5.29,5.51 c3.83,0,4.74-2.5,4.91-4.13H140.34L140.34,494.64z"/> <path class="st8" d="M180.42,499.14c3.72,0,5.46-2.44,5.46-5.71s-1.74-5.71-5.46-5.71c-4.26,0-5.46,3.19-5.46,5.71 S176.16,499.14,180.42,499.14L180.42,499.14z M180.42,497.04c-1.4,0-2.7-0.79-2.7-3.61c0-2.86,1.3-3.61,2.7-3.61 c2.61,0,2.72,2.64,2.72,3.61C183.14,494.34,183.01,497.04,180.42,497.04L180.42,497.04z"/> <polygon class="st8" points="222.52,498.77 224.25,498.77 226.95,491.05 227,491.05 227,498.77 229.55,498.77 229.55,487.96 225.97,487.96 223.39,495.38 220.81,487.96 217.23,487.96 217.23,498.77 219.78,498.77 219.78,491.05 219.82,491.05 222.52,498.77 "/> <path class="st8" d="M261.25,488.04v10.8h2.54v-3.72h2.42c1.31,0,4.13-0.22,4.13-3.6c0-2.67-1.88-3.49-4.07-3.49H261.25 L261.25,488.04z M263.79,490.14h1.99c0.57,0,1.82-0.06,1.82,1.4c0,1.05-0.62,1.48-1.82,1.48h-1.99V490.14L263.79,490.14z"/> <path class="st8" d="M303.78,487.8l-4.05,10.8h2.69l0.68-2.02h3.92l0.7,2.02h2.7l-4.06-10.8H303.78L303.78,487.8z M303.65,494.75 l1.42-4.12l1.39,4.12H303.65L303.65,494.75z"/> <polygon class="st8" points="344.83,491.93 349.09,498.69 351.68,498.69 351.68,487.89 349.13,487.89 349.13,494.6 349.09,494.6 344.83,487.89 342.25,487.89 342.25,498.69 344.8,498.69 344.8,491.93 344.83,491.93 "/> <polygon class="st8" points="387.62,492.77 385.34,488.09 382.43,488.09 386.34,494.82 386.34,498.89 388.9,498.89 388.9,494.82 392.68,488.09 389.91,488.09 387.62,492.77 "/> <path class="st5" d="M66.84,490.13h-3.12v8.69h-2.44v-8.69h-3.15v-2.09h8.72V490.13z"/> <path class="st5" d="M25.76,498.66h-2.45v-10.8h2.45V498.66z"/> </g> </g> </svg></span>
+        <div class="footer-logo-sub" style="margin-top:4px;">GLPI Solutions Provider</div>
+      </div>
+      <div class="footer-links">
+        <a href="#about-glpi">Про GLPI</a>
+        <a href="#advantages">Переваги</a>
+        <a href="#plugins">Плагіни</a>
+        <a href="#itrm">ITRM</a>
+        <a href="#expertise">Про нас</a>
+        <a href="#contact">Контакти</a>
+        <a href="https://techexpert.ua" target="_blank" rel="noopener noreferrer">techexpert.ua ↗</a>
+      </div>
+      <div class="footer-social">
+        <a href="https://facebook.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="Facebook">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor"><path d="M18 2h-3a5 5 0 0 0-5 5v3H7v4h3v8h4v-8h3l1-4h-4V7a1 1 0 0 1 1-1h3z"/></svg>
+        </a>
+        <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="LinkedIn">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg>
+        </a>
+        <a href="https://youtube.com" target="_blank" rel="noopener noreferrer" class="social-btn" aria-label="YouTube">
+          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22.54 6.42a2.78 2.78 0 0 0-1.94-1.96C18.88 4 12 4 12 4s-6.88 0-8.6.46a2.78 2.78 0 0 0-1.94 1.96A29 29 0 0 0 1 12a29 29 0 0 0 .46 5.58A2.78 2.78 0 0 0 3.4 19.54C5.12 20 12 20 12 20s6.88 0 8.6-.46a2.78 2.78 0 0 0 1.94-1.96A29 29 0 0 0 23 12a29 29 0 0 0-.46-5.58z"/><polygon points="9.75 15.02 15.5 12 9.75 8.98 9.75 15.02" fill="currentColor" stroke="none"/></svg>
+        </a>
+      </div>
+    </div>
+    <div class="footer-bottom">
+      <div class="footer-copy">© 2026 TechExpert. All Rights Reserved.</div>
+      <div class="footer-made">
+        <a href="https://techexpert.ua" target="_blank" rel="noopener noreferrer">techexpert.ua</a> · Автоматизація ІТ-служб на базі GLPI
+      </div>
+    </div>
+  </div>
+</footer>
+
+<!-- ===== STICKY MOBILE CTA ===== -->
+<div class="sticky-cta">
+  <a href="mailto:tsales@techexpert.ua?subject=Замовлення консультації" class="btn btn-accent btn-lg">
+    <i data-lucide="mail" style="width:18px;height:18px;"></i>
+    Замовити консультацію
+  </a>
+</div>
+
+<!-- ===== JAVASCRIPT ===== -->
+<script>
+  // Init Lucide icons
+  lucide.createIcons();
+
+  // ===== HAMBURGER MENU =====
+  const hamburger = document.getElementById('hamburger');
+  const mobileNav = document.getElementById('mobile-nav');
+
+  hamburger.addEventListener('click', () => {
+    hamburger.classList.toggle('active');
+    mobileNav.classList.toggle('open');
+  });
+
+  mobileNav.querySelectorAll('a').forEach(link => {
+    link.addEventListener('click', () => {
+      hamburger.classList.remove('active');
+      mobileNav.classList.remove('open');
+    });
+  });
+
+  // ===== STICKY HEADER =====
+  const header = document.getElementById('main-header');
+  window.addEventListener('scroll', () => {
+    header.classList.toggle('scrolled', window.scrollY > 20);
+  });
+
+  // ===== INTERSECTION OBSERVER (scroll animations) =====
+  const animObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting) {
+        entry.target.classList.add('visible');
+      }
+    });
+  }, { threshold: 0.12, rootMargin: '0px 0px -40px 0px' });
+
+  document.querySelectorAll('.fade-in, .fade-in-left, .fade-in-right').forEach(el => {
+    animObserver.observe(el);
+  });
+
+  // ===== ANIMATED COUNTERS =====
+  function animateCounter(el) {
+    const target = parseInt(el.dataset.target);
+    const suffix = el.dataset.suffix || '';
+    const duration = 1800;
+    const start = performance.now();
+
+    function update(now) {
+      const elapsed = now - start;
+      const progress = Math.min(elapsed / duration, 1);
+      const eased = 1 - Math.pow(1 - progress, 3);
+      const value = Math.floor(eased * target);
+      el.textContent = value + suffix;
+      if (progress < 1) requestAnimationFrame(update);
+    }
+    requestAnimationFrame(update);
+  }
+
+  const counterObserver = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+      if (entry.isIntersecting && !entry.target.dataset.counted) {
+        entry.target.dataset.counted = 'true';
+        animateCounter(entry.target);
+      }
+    });
+  }, { threshold: 0.5 });
+
+  document.querySelectorAll('.counter').forEach(el => counterObserver.observe(el));
+
+  // ===== FAQ ACCORDION =====
+  document.querySelectorAll('.faq-question').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.parentElement;
+      const isOpen = item.classList.contains('open');
+
+      // Close all
+      document.querySelectorAll('.faq-item').forEach(i => i.classList.remove('open'));
+
+      // Toggle current
+      if (!isOpen) item.classList.add('open');
+    });
+  });
+
+  // ===== CONTACT FORM → MAILTO =====
+  function submitForm(e) {
+    e.preventDefault();
+    const name = document.getElementById('f-name').value;
+    const company = document.getElementById('f-company').value;
+    const email = document.getElementById('f-email').value;
+    const phone = document.getElementById('f-phone').value;
+    const message = document.getElementById('f-message').value;
+
+    const subject = encodeURIComponent(`Запит від ${name} (${company})`);
+    const body = encodeURIComponent(
+      `Ім'я: ${name}\nКомпанія: ${company}\nEmail: ${email}\nТелефон: ${phone}\n\nПовідомлення:\n${message}`
+    );
+
+    window.location.href = `mailto:tsales@techexpert.ua?subject=${subject}&body=${body}`;
+  }
+
+  // ===== SMOOTH SCROLL OFFSET (for sticky header) =====
+  document.querySelectorAll('a[href^="#"]').forEach(a => {
+    a.addEventListener('click', e => {
+      const target = document.querySelector(a.getAttribute('href'));
+      if (!target) return;
+      e.preventDefault();
+      const offset = 80;
+      window.scrollTo({
+        top: target.getBoundingClientRect().top + window.scrollY - offset,
+        behavior: 'smooth'
+      });
+    });
+  });
+
+  // ===== REINIT LUCIDE after DOM operations =====
+  // (already initialized above, re-call after potential dynamic content)
+  document.addEventListener('DOMContentLoaded', () => {
+    lucide.createIcons();
+  });
+</script>
+
+</body>
+</html>
