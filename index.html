@@ -930,9 +930,18 @@
       transform: translateY(-3px);
     }
     .plugin-icon {
-      font-size: 2rem;
-      margin-bottom: 14px;
-      display: block;
+      width: 52px; height: 52px;
+      background: rgba(0,119,204,0.08);
+      border: 1px solid rgba(0,119,204,0.12);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      transition: background var(--transition);
+    }
+    .plugin-card:hover .plugin-icon {
+      background: rgba(0,119,204,0.15);
     }
     .plugin-card h3 { font-size: 1rem; font-weight: 600; color: var(--text-dark); margin-bottom: 8px; }
     .plugin-card p { font-size: 0.85rem; color: var(--text-muted); line-height: 1.65; }
@@ -1049,7 +1058,20 @@
       transform: translateY(-4px);
       border-color: rgba(0,119,204,0.2);
     }
-    .use-case-emoji { font-size: 2.5rem; margin-bottom: 16px; display: block; }
+    .use-case-icon {
+      width: 52px; height: 52px;
+      background: rgba(0,119,204,0.08);
+      border: 1px solid rgba(0,119,204,0.12);
+      border-radius: 14px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin-bottom: 18px;
+      transition: background var(--transition);
+    }
+    .use-case-card:hover .use-case-icon {
+      background: rgba(0,119,204,0.15);
+    }
     .use-case-card h3 { font-size: 1.05rem; font-weight: 700; margin-bottom: 10px; color: var(--text-dark); }
     .use-case-card p { font-size: 0.88rem; color: var(--text-muted); line-height: 1.65; }
 
@@ -2453,47 +2475,47 @@
     </div>
     <div class="plugins-grid">
       <div class="plugin-card fade-in fade-in-delay-1">
-        <span class="plugin-icon">🤖</span>
+        <div class="plugin-icon"><i data-lucide="bot" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>AI Assistant for GLPI</h3>
         <p>Штучний інтелект для автоматичної обробки звернень: чат-асистент, автоматичне створення заявок, переклад та підтримка на рівні користувача.</p>
       </div>
       <div class="plugin-card fade-in fade-in-delay-2">
-        <span class="plugin-icon">📱</span>
+        <div class="plugin-icon"><i data-lucide="message-circle" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Telegram-бот для GLPI</h3>
         <p>Миттєві сповіщення про зміну статусу заявок та нові призначення через Telegram — без необхідності входити в систему.</p>
       </div>
       <div class="plugin-card fade-in fade-in-delay-3">
-        <span class="plugin-icon">🔀</span>
+        <div class="plugin-icon"><i data-lucide="git-branch" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Бізнес-процеси (GLPI Processes)</h3>
         <p>Налаштування складних бізнес-процесів з етапністю, паралельними гілками та різними виконавчими групами.</p>
       </div>
       <div class="plugin-card fade-in fade-in-delay-1">
-        <span class="plugin-icon">📞</span>
+        <div class="plugin-icon"><i data-lucide="phone-call" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Asterisk Connector</h3>
         <p>Інтеграція з IP-телефонією Asterisk: автоматична реєстрація заявок на вхідні та вихідні дзвінки, контроль статусу викликів.</p>
       </div>
       <div class="plugin-card fade-in fade-in-delay-2">
-        <span class="plugin-icon">🛡️</span>
+        <div class="plugin-icon"><i data-lucide="shield-check" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>ITRM (IT Risk Manager)</h3>
         <p>Система управління ризиками інформаційної безпеки за міжнародними стандартами. Власна розробка TechExpert.</p>
       </div>
       <div class="plugin-card fade-in fade-in-delay-3">
-        <span class="plugin-icon">📋</span>
+        <div class="plugin-icon"><i data-lucide="sliders" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Додаткові поля</h3>
         <p>Кастомні поля у формах заявок із динамічним відображенням залежно від категорії звернення.</p>
       </div>
       <div class="plugin-card fade-in fade-in-delay-1">
-        <span class="plugin-icon">📈</span>
+        <div class="plugin-icon"><i data-lucide="bar-chart-2" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Розширена звітність</h3>
         <p>KPI-звіти, оцінка ефективності співробітників, вивантаження до .XLS для подальшого аналізу в Excel.</p>
       </div>
       <div class="plugin-card fade-in fade-in-delay-2">
-        <span class="plugin-icon">🎫</span>
+        <div class="plugin-icon"><i data-lucide="inbox" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Розширена робота із заявками</h3>
         <p>Лічильники, підсвітка, автоматичні статуси та каталог сервісів — підвищення продуктивності обробки звернень.</p>
       </div>
       <div class="plugin-card fade-in fade-in-delay-3">
-        <span class="plugin-icon">🔔</span>
+        <div class="plugin-icon"><i data-lucide="bell" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Управління сповіщеннями</h3>
         <p>Гнучке планування та відправка повідомлень із налаштуванням змінних та можливістю зворотного зв'язку.</p>
       </div>
@@ -2602,17 +2624,17 @@
     </div>
     <div class="use-cases-grid">
       <div class="use-case-card fade-in fade-in-delay-1">
-        <span class="use-case-emoji">🚚</span>
+        <div class="use-case-icon"><i data-lucide="truck" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Логістичний відділ</h3>
         <p>Заявки на транспорт, відстеження доставок та управління автопарком у єдиній системі.</p>
       </div>
       <div class="use-case-card fade-in fade-in-delay-2">
-        <span class="use-case-emoji">🏗️</span>
+        <div class="use-case-icon"><i data-lucide="hard-hat" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>Інженерний відділ</h3>
         <p>Заявки на обслуговування інженерних комунікацій: ОВІП, електрика, водопостачання.</p>
       </div>
       <div class="use-case-card fade-in fade-in-delay-3">
-        <span class="use-case-emoji">🏢</span>
+        <div class="use-case-icon"><i data-lucide="building-2" style="width:26px;height:26px;color:var(--primary);"></i></div>
         <h3>АГС відділ</h3>
         <p>Замовлення канцтоварів, комплектуючих та витратних матеріалів з контролем виконання.</p>
       </div>
